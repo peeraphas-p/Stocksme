@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  ChartCandlestick,
   ChartNoAxesCombined,
   Home,
   Moon,
@@ -17,6 +16,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { BrandMark, Wordmark } from "@/components/Brand";
 import { GLASS_PRESETS, useAppearance, useResolvedDark, type Appearance } from "@/lib/appearance";
 import { supabase } from "@/lib/supabase/client";
 
@@ -182,10 +182,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="mx-auto w-full max-w-[1280px]">
         <header className="glass relative z-30 mb-3 flex h-14 items-center justify-between gap-3 rounded-[18px] px-3 sm:mb-4 sm:h-[62px] sm:rounded-[20px] sm:px-5">
           <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap">
-            <span className="grid h-[29px] w-[29px] place-items-center rounded-[9px] bg-brand text-brand-ink">
-              <ChartCandlestick size={17} strokeWidth={1.8} aria-hidden="true" />
-            </span>
-            <strong className="text-sm font-semibold tracking-tight">Stocksme</strong>
+            <BrandMark size={28} className="-my-1" />
+            <Wordmark className="text-[17px]" />
             <span className="hidden h-4 w-px bg-[var(--border)] sm:block" />
             <span className="hidden text-xs text-muted sm:block">บันทึกการเทรด</span>
           </Link>

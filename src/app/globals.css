@@ -24,6 +24,7 @@
   --loss: #bf4628;
   --gain-soft: #13846c1f;
   --loss-soft: #bf46281f;
+  --logo-green: #4f9a52;
 
   --glass-blur: 22px;
   --glass-opacity: 0.3;
@@ -54,6 +55,7 @@
     --loss: #e4663f;
     --gain-soft: #22a38a2b;
     --loss-soft: #e4663f2b;
+    --logo-green: #7cb877;
     --glass-tint: #3a3128;
     color-scheme: dark;
   }
@@ -77,6 +79,7 @@
   --loss: #e4663f;
   --gain-soft: #22a38a2b;
   --loss-soft: #e4663f2b;
+  --logo-green: #7cb877;
   --glass-tint: #3a3128;
   color-scheme: dark;
 }
@@ -131,6 +134,12 @@ body::after {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
+}
+
+.font-serif-brand {
+  font-family: Georgia, "Times New Roman", "Noto Serif Thai", serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 @layer components {

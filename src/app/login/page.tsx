@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChartCandlestick } from "lucide-react";
+import { BrandMark, Wordmark } from "@/components/Brand";
 import { supabase } from "@/lib/supabase/client";
 
 /** แปลข้อความ error ที่พบบ่อยจาก Supabase Auth เป็นภาษาไทย พร้อมบอกวิธีแก้ */
@@ -59,11 +59,12 @@ export default function LoginPage() {
     <main className="min-h-dvh grid place-items-center px-4">
       <form onSubmit={submit} className="glass w-full max-w-sm space-y-4 rounded-[24px] p-6 sm:p-7">
         <div>
-          <span className="mb-4 grid h-10 w-10 place-items-center rounded-[12px] bg-brand text-brand-ink">
-            <ChartCandlestick size={21} strokeWidth={1.8} aria-hidden="true" />
-          </span>
+          <div className="mb-5 flex flex-col items-center gap-2 text-center">
+            <BrandMark size={64} />
+            <Wordmark className="text-[26px]" />
+          </div>
           <h1 className="text-[26px] leading-tight font-medium tracking-[-0.035em]">{mode === "signin" ? "ยินดีต้อนรับกลับ" : "สร้างบัญชี"}</h1>
-          <p className="mt-1 text-[13px] text-muted">Stocksme · บันทึกการเทรดหุ้น US ของคุณ</p>
+          <p className="mt-1 text-[13px] text-muted">บันทึกการเทรดหุ้น US ของคุณ</p>
         </div>
         <label className="field">
           <span>อีเมล</span>
