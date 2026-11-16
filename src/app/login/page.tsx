@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BrandMark, Wordmark } from "@/components/Brand";
 import { supabase } from "@/lib/supabase/client";
@@ -27,6 +29,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  // เปิดมาจากปุ่ม "เริ่มใช้ฟรี" (?mode=signup) → แสดงฟอร์มสมัคร
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("mode") === "signup") setMode("signup");
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +63,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-dvh grid place-items-center px-4">
+    <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
       <form onSubmit={submit} className="glass w-full max-w-sm space-y-4 rounded-[24px] p-6 sm:p-7">
         <div>
           <div className="mb-5 flex flex-col items-center gap-2 text-center">
@@ -93,6 +100,10 @@ export default function LoginPage() {
           {mode === "signin" ? "ยังไม่มีบัญชี? สมัครสมาชิก" : "มีบัญชีแล้ว? เข้าสู่ระบบ"}
         </button>
       </form>
+      <Link href="/welcome" className="mt-4 flex items-center justify-center gap-1.5 text-[13px] text-muted hover:text-fg">
+        <ArrowLeft size={14} aria-hidden="true" />
+        กลับหน้าแรก
+      </Link>
     </main>
   );
 }
