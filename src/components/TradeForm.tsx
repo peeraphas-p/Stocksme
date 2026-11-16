@@ -82,8 +82,9 @@ export default function TradeForm({
       emotion: emotion || null,
       note: note || null,
       broker: broker || null,
-      stop_price: side === "BUY" && stop !== "" ? stop : null,
-      target_price: side === "BUY" && target !== "" ? target : null,
+      // ส่งช่องแผนความเสี่ยงเฉพาะเมื่อมีค่า (หรือกำลังล้างค่าเดิม) — ฐานข้อมูลที่ยังไม่ได้รัน migration 2 จะได้ไม่พัง
+      ...(side === "BUY" && (stop !== "" || trade?.stop_price != null) ? { stop_price: stop === "" ? null : stop } : {}),
+      ...(side === "BUY" && (target !== "" || trade?.target_price != null) ? { target_price: target === "" ? null : target } : {}),
     };
     try {
       if (trade) await updateTrade(trade.id, row);
