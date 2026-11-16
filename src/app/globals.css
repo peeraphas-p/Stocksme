@@ -1,26 +1,83 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --border: #e3e6ea;
+  --fg: #14171a;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --gain: #078a7a;
+  --loss: #d9482b;
+  --gain-soft: #dff2ef;
+  --loss-soft: #fbe6e1;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0d1014;
+    --surface: #161a20;
+    --border: #262c35;
+    --fg: #e8eaed;
+    --muted: #9aa0a6;
+    --accent: #5b8def;
+    --gain: #21a893;
+    --loss: #e8603f;
+    --gain-soft: #0f2e2a;
+    --loss-soft: #3a1714;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-gain: var(--gain);
+  --color-loss: var(--loss);
+  --color-gain-soft: var(--gain-soft);
+  --color-loss-soft: var(--loss-soft);
+  --font-sans: var(--font-thai), ui-sans-serif, system-ui, sans-serif;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-border rounded-2xl p-4;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1 rounded-xl px-4 py-2 text-sm font-medium border border-border bg-surface hover:opacity-90 disabled:opacity-50 cursor-pointer;
+  }
+  .btn-primary {
+    @apply bg-accent text-white border-transparent;
+  }
+  .btn-danger {
+    @apply text-loss;
+  }
+  .field {
+    @apply flex flex-col gap-1 text-sm;
+  }
+  .field > span {
+    @apply text-muted;
+  }
+  .field input,
+  .field select,
+  .field textarea,
+  .input {
+    @apply w-full rounded-xl border border-border bg-bg px-3 py-2 text-base outline-none focus:border-accent;
+  }
+  .chip {
+    @apply rounded-full border border-border px-3 py-1 text-sm cursor-pointer;
+  }
+  .chip-on {
+    @apply bg-accent text-white border-transparent;
+  }
 }

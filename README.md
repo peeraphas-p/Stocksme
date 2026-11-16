@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📈 Stocksme
 
-## Getting Started
+เว็บแอปบันทึกการเทรดหุ้น US (แนว trading journal) — กำไรขาดทุนแบบ FIFO ทั้ง USD และบาท, Dashboard, ปฏิทินกำไรรายวัน, รายงานตามกลยุทธ์/อารมณ์/เวลา, สมุดบันทึก และนำเข้าไฟล์จาก Webull / Dime / Liberator
 
-First, run the development server:
+ใช้ได้ทั้งคอมและมือถือ (ติดตั้งเป็นแอปบนหน้าจอได้: เปิดเว็บใน Safari/Chrome → "เพิ่มลงหน้าจอโฮม")
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## เริ่มใช้งาน
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. สร้างโปรเจกต์ฟรีที่ [supabase.com](https://supabase.com)
+2. Supabase → **SQL Editor** → วางไฟล์ [`supabase/schema.sql`](supabase/schema.sql) → **Run**
+3. Supabase → **Project Settings → API** → คัดลอก Project URL และ anon public key
+4. คัดลอก `.env.local.example` เป็น `.env.local` แล้วใส่ค่าทั้งสอง
+5. รัน
+   ```bash
+   npm install
+   npm run dev
+   ```
+   เปิด http://localhost:3000 → สมัครสมาชิก
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> ถ้าเปิดยืนยันอีเมลไว้ (ค่าเริ่มต้นของ Supabase) ให้ตั้ง **Authentication → URL Configuration → Site URL** เป็น URL ของเว็บ (เช่น `http://localhost:3000` หรือ URL บน Vercel) เพื่อให้ลิงก์ในอีเมลกลับมาที่แอปได้
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ขึ้นออนไลน์ (ใช้จากมือถือได้ทุกที่)
 
-## Learn More
+1. push โค้ดขึ้น GitHub
+2. [vercel.com](https://vercel.com) → Import โปรเจกต์ → ใส่ Environment Variables 2 ตัวเดียวกับ `.env.local` → Deploy
+3. เอา URL ของ Vercel ไปใส่ใน Supabase Site URL
 
-To learn more about Next.js, take a look at the following resources:
+## การคำนวณ
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **FIFO** แยกตามหุ้น: ขายแล้วจับคู่กับล็อตที่ซื้อก่อนสุด, รองรับหุ้นเศษส่วน (คำนวณด้วย decimal.js)
+- ค่าธรรมเนียมซื้อรวมในทุน, ค่าธรรมเนียมขายหักจากรายรับ
+- **กำไรเป็นบาท** = รายรับ × อัตรา ฿/$ วันขาย − ทุน × อัตรา ฿/$ วันซื้อ (จึงรวมผลจากค่าเงินด้วย)
+- อัตรา ฿/$ ดึงอัตโนมัติจาก Frankfurter (ข้อมูล ECB) ตามวันที่ของรายการ แก้เองได้ในแต่ละรายการ
+- Win rate นับ "การขาย 1 ครั้ง" เป็น 1 เทรด
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## คำสั่ง
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| คำสั่ง | ทำอะไร |
+|---|---|
+| `npm run dev` | รันเครื่องตัวเอง |
+| `npm test` | ทดสอบการคำนวณ P/L และตัวอ่านไฟล์ |
+| `npm run build` | build สำหรับ production |
