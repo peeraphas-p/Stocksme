@@ -160,7 +160,7 @@ describe("Dime export", () => {
     expect(parsed[2].trade).toMatchObject({ price_usd: 420.1, fee_usd: 1.69, fx_rate: 34.1, executed_at: "2026-01-20T15:00:00.000Z", external_key: "dime|order:100003|SELL|1" });
 
     // กำไรหลังหักค่าธรรมเนียมทั้งสองขา และแปลงเป็นบาทด้วยอัตราของแต่ละวัน
-    const r = computePnl(parsed.map((p, i) => ({ id: `t${i}`, ...p.trade! })));
+    const r = computePnl(parsed.map((p, i) => ({ id: `t${i}`, ...p.trade! })), 35, new Date("2026-01-15T12:00:00Z")); // ก่อนออปชันตัวอย่างหมดอายุ
     expect(r.closed).toHaveLength(1);
     expect(r.closed[0].costUsd).toBeCloseTo(1027.27, 6); // = ยอดรวม (USD) ในชีตซื้อ
     expect(r.closed[0].proceedsUsd).toBeCloseTo(1048.56, 6); // = ยอดรับสุทธิ (USD) ในชีตขาย

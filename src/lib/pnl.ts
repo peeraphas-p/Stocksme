@@ -1,4 +1,6 @@
 import Decimal from "decimal.js";
+import { DATE_ONLY_NY_HOUR, zonedToIso } from "./importers";
+import { parseOption } from "./options";
 import type { Trade } from "./types";
 
 /** ไม้ที่ปิดแล้ว: ส่วนของการซื้อหนึ่งครั้งที่จับคู่กับการขายหนึ่งครั้ง (FIFO) */
@@ -23,6 +25,8 @@ export interface ClosedLot {
   holdingMinutes: number;
   strategyTag: string | null;
   emotion: string | null;
+  /** ออปชันที่หมดอายุโดยไม่มีรายการขาย — ปิดให้อัตโนมัติที่ $0 ณ วันหมดอายุ */
+  expired?: boolean;
 }
 
 export interface OpenPosition {
@@ -108,11 +112,15 @@ function groupsByTime(trades: Trade[]): Trade[][] {
   return groups;
 }
 
+/** วันที่ (YYYY-MM-DD) ตามเวลานิวยอร์ก */
+const nyDay = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(d);
+
 /**
  * จับคู่ซื้อ-ขายแบบ FIFO แยกตามหุ้น
  * @param fallbackFx อัตรา THB/USD ที่ใช้เมื่อรายการไม่มี fx_rate
+ * @param asOf วันที่ใช้ตัดสินว่าออปชันหมดอายุแล้วหรือยัง (ค่าเริ่มต้น: ตอนนี้)
  */
-export function computePnl(trades: Trade[], fallbackFx = 35): PnlResult {
+export function computePnl(trades: Trade[], fallbackFx = 35, asOf: Date = new Date()): PnlResult {
   const books = new Map<string, Lot[]>();
   const closed: ClosedLot[] = [];
   const warnings: string[] = [];
@@ -202,6 +210,43 @@ export function computePnl(trades: Trade[], fallbackFx = 35): PnlResult {
       });
       for (const tr of oversells ? buysFirst(list) : list) apply(tr);
     }
+  }
+
+  // ออปชันที่เลยวันหมดอายุแล้วแต่ยังเหลืออยู่ = หมดอายุโดยไม่มีมูลค่า → ปิดที่ $0 ณ วันหมดอายุ
+  // (ลงเวลาแบบ "มีแต่วันที่" เพื่อให้แสดงเป็นวันหมดอายุทั้งเวลา US และเวลาไทย)
+  // (ถ้าใช้สิทธิ์หรือขายไปแล้ว รายการขายในไฟล์จะปิดล็อตไปก่อนถึงตรงนี้)
+  const today = nyDay(asOf);
+  for (const [symbol, book] of books) {
+    const opt = parseOption(symbol);
+    if (!opt || opt.expiry >= today) continue;
+    const [y, m, d] = opt.expiry.split("-").map(Number);
+    const at = zonedToIso(y, m, d, DATE_ONLY_NY_HOUR, 0, 0, "America/New_York");
+    for (const lot of book) {
+      if (lot.qty.lte(DUST)) continue;
+      const cost = lot.costPerShare.times(lot.qty);
+      closed.push({
+        symbol,
+        qty: lot.qty.toNumber(),
+        buyTradeId: lot.tradeId,
+        sellTradeId: `expired:${symbol}:${lot.tradeId}`,
+        buyAt: lot.at,
+        sellAt: at,
+        buyPrice: lot.price.toNumber(),
+        sellPrice: 0,
+        costUsd: cost.toNumber(),
+        proceedsUsd: 0,
+        feesUsd: lot.costPerShare.minus(lot.price).times(lot.qty).toNumber(),
+        pnlUsd: cost.neg().toNumber(),
+        costThb: cost.times(lot.fx).toNumber(),
+        proceedsThb: 0,
+        pnlThb: cost.times(lot.fx).neg().toNumber(),
+        holdingMinutes: Math.round((new Date(at).getTime() - new Date(lot.at).getTime()) / 60000),
+        strategyTag: lot.strategyTag,
+        emotion: lot.emotion,
+        expired: true,
+      });
+    }
+    book.length = 0;
   }
 
   const open: OpenPosition[] = [];

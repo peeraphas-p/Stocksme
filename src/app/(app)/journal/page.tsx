@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { NotebookPen, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { TickerLogo } from "@/components/Ticker";
 import { Empty, ErrorBox, PageHeader, Sheet } from "@/components/ui";
 import { deleteJournal, saveJournal, useJournal } from "@/lib/data";
 import { money, tone } from "@/lib/format";
@@ -165,7 +166,12 @@ export default function JournalPage() {
                 </div>
                 {(e.symbol || e.strategy_tag || e.emotion) && (
                   <div className="flex flex-wrap gap-1.5">
-                    {e.symbol && <span className="tag bg-bg">{e.symbol}</span>}
+                    {e.symbol && (
+                      <span className="tag bg-bg">
+                        <TickerLogo symbol={e.symbol} size={14} />
+                        {e.symbol}
+                      </span>
+                    )}
                     {e.strategy_tag && <span className="tag bg-bg">{e.strategy_tag}</span>}
                     {e.emotion && <span className="tag bg-bg">{e.emotion}</span>}
                   </div>

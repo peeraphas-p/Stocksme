@@ -3,15 +3,13 @@
 import { useMemo, useState } from "react";
 import TradeForm from "@/components/TradeForm";
 import { Briefcase, CalendarClock, Pencil, Plus, Search, Trash2, TriangleAlert } from "lucide-react";
+import { Ticker } from "@/components/Ticker";
 import { CurrencyToggle, Empty, ErrorBox, Note, PageHeader, Segmented, Sheet } from "@/components/ui";
 import { deleteTrade } from "@/lib/data";
 import { holding, money, price, qty, tone, tradeTime } from "@/lib/format";
-import { usMarketDay } from "@/lib/fx";
-import { zonedToIso } from "@/lib/importers";
 import { parseOption } from "@/lib/options";
-import type { OpenPosition } from "@/lib/pnl";
 import { useApp } from "@/lib/useApp";
-import type { NewTrade, Trade } from "@/lib/types";
+import type { Trade } from "@/lib/types";
 
 type Tab = "all" | "closed" | "open";
 
@@ -21,28 +19,7 @@ export default function TradesPage() {
   const [tab, setTab] = useState<Tab>("closed");
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Trade | "new" | null>(null);
-  const [preset, setPreset] = useState<Partial<NewTrade> | undefined>();
-  const today = usMarketDay(new Date().toISOString());
-
-  const closeSheet = () => {
-    setEditing(null);
-    setPreset(undefined);
-  };
-
-  /** เปิดฟอร์มขายที่ $0 ณ วันหมดอายุ สำหรับออปชันที่หมดอายุโดยไม่มีมูลค่า */
-  function closeExpired(o: OpenPosition, expiry: string) {
-    const [y, m, d] = expiry.split("-").map(Number);
-    setPreset({
-      symbol: o.symbol,
-      side: "SELL",
-      qty: o.qty,
-      price_usd: 0,
-      fee_usd: 0,
-      executed_at: zonedToIso(y, m, d, 16, 0, 0, "America/New_York"),
-      note: "ออปชันหมดอายุโดยไม่มีมูลค่า",
-    });
-    setEditing("new");
-  }
+  const closeSheet = () => setEditing(null);
 
   const query = q.trim().toUpperCase();
   const match = (s: string) => !query || s.includes(query);
@@ -119,11 +96,16 @@ export default function TradesPage() {
                   const cost = currency === "USD" ? l.costUsd : l.costThb;
                   return (
                     <tr key={i}>
-                      <td className="p-3 font-medium">{l.symbol}</td>
+                      <td className="p-3">
+                        <Ticker
+                          symbol={l.symbol}
+                          sub={l.expired ? <span className="text-loss">หมดอายุโดยไม่มีมูลค่า</span> : undefined}
+                        />
+                      </td>
                       <td className="p-3 text-muted whitespace-nowrap">{tradeTime(l.sellAt)}</td>
                       <td className="p-3 text-right">{qty(l.qty)}</td>
                       <td className="p-3 text-right hidden sm:table-cell whitespace-nowrap">
-                        {price(l.buyPrice)} → {price(l.sellPrice)}
+                        {price(l.buyPrice)} → {l.expired ? "หมดอายุ" : price(l.sellPrice)}
                       </td>
                       <td className="p-3 text-right hidden md:table-cell text-muted">{holding(l.holdingMinutes)}</td>
                       <td className="p-3 hidden md:table-cell text-muted">{l.strategyTag ?? "—"}</td>
@@ -145,36 +127,20 @@ export default function TradesPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {open.map((o) => {
               const opt = parseOption(o.symbol);
-              const expired = opt != null && opt.expiry < today;
               return (
                 <div key={o.symbol} className="card">
-                  <div className="flex justify-between gap-2">
-                    <span className="text-base font-semibold tracking-tight break-all">{opt ? `${opt.underlying} ${opt.type} $${opt.strike}` : o.symbol}</span>
-                    <span className="text-muted text-sm whitespace-nowrap">
+                  <div className="flex items-start justify-between gap-2">
+                    <Ticker symbol={o.symbol} size={34} className="text-[15px]" />
+                    <span className="text-muted text-xs whitespace-nowrap pt-1">
                       {qty(o.qty)} {opt ? "สัญญา" : "หุ้น"}
                     </span>
                   </div>
-                  {opt && (
-                    <div className="text-xs text-muted">
-                      ออปชัน · หมดอายุ {new Date(opt.expiry + "T00:00:00").toLocaleDateString("th-TH", { dateStyle: "medium" })}
-                    </div>
-                  )}
                   <div className="big-number mt-3 text-[22px]">{money(currency === "USD" ? o.costUsd : o.costThb, currency)}</div>
                   <div className="mt-1 text-xs text-muted">ทุนรวม · เฉลี่ย {price(o.avgCostUsd)} ต่อ{opt ? "สัญญา" : "หุ้น"}</div>
                   <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-[11px] text-muted">
                     <CalendarClock size={13} aria-hidden="true" />
                     ซื้อครั้งแรก {tradeTime(o.firstBuyAt)}
                   </div>
-                  {expired && (
-                    <div className="mt-3">
-                      <Note icon={TriangleAlert} tone="loss">
-                        <p className="text-xs">หมดอายุแล้วแต่ยังไม่มีรายการขาย ถ้าหมดอายุโดยไม่มีมูลค่า ให้บันทึกขายที่ $0 เพื่อนับเป็นขาดทุน</p>
-                        <button className="btn mt-2 !py-1.5 text-xs" onClick={() => closeExpired(o, opt.expiry)}>
-                          บันทึกหมดอายุที่ $0
-                        </button>
-                      </Note>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -202,10 +168,10 @@ export default function TradesPage() {
                 <tr key={t.id}>
                   <td className="p-3 text-muted whitespace-nowrap">{tradeTime(t.executed_at)}</td>
                   <td className="p-3 whitespace-nowrap">
-                    <span className={`tag mr-2 ${t.side === "BUY" ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>
-                      {t.side === "BUY" ? "ซื้อ" : "ขาย"}
+                    <span className="flex items-center gap-2.5">
+                      <Ticker symbol={t.symbol} size={26} />
+                      <span className={`tag ${t.side === "BUY" ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>{t.side === "BUY" ? "ซื้อ" : "ขาย"}</span>
                     </span>
-                    <span className="font-medium">{t.symbol}</span>
                   </td>
                   <td className="p-3 text-right">{qty(t.qty)}</td>
                   <td className="p-3 text-right">{price(t.price_usd)}</td>
@@ -232,7 +198,6 @@ export default function TradesPage() {
           <TradeForm
             key={editing === "new" ? "new" : editing.id}
             trade={editing === "new" ? undefined : editing}
-            preset={editing === "new" ? preset : undefined}
             strategyTags={app.profile.strategy_tags}
             onDone={() => {
               closeSheet();

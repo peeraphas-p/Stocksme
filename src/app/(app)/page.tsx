@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, Briefcase, Coins, Percent, Scale, TrendingUp, TriangleAlert, Upload, Wallet } from "lucide-react";
 import { DailyBars, EquityChart } from "@/components/Charts";
 import PnlCalendar from "@/components/PnlCalendar";
+import { Ticker, TickerLogo, tickerLabel } from "@/components/Ticker";
 import { CurrencyToggle, Empty, ErrorBox, PageHeader, Segmented, Stat } from "@/components/ui";
 import { money, pct, tone, tradeTime } from "@/lib/format";
 import { dailyPnl, equityCurve, filterByPeriod, groupPnl, localDay, roundTrips, summarize, type Period } from "@/lib/stats";
@@ -161,14 +162,11 @@ export default function Dashboard() {
             <div>
               {recent.map((r) => (
                 <div key={r.sellTradeId} className="flex items-center gap-3 border-t border-border py-2.5 first:border-0 first:pt-0 last:pb-0">
-                  <span className={`grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] ${r.pnl >= 0 ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>
-                    {r.pnl >= 0 ? <ArrowUpRight size={17} aria-hidden="true" /> : <ArrowDownRight size={17} aria-hidden="true" />}
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <strong className="truncate text-[13px] font-medium">{r.symbol}</strong>
-                    <span className="text-[11px] text-muted">ขาย {tradeTime(r.sellAt)}</span>
-                  </span>
-                  <strong className={`text-[13px] font-medium whitespace-nowrap ${tone(r.pnl)}`}>{money(r.pnl, currency, { sign: true })}</strong>
+                  <Ticker symbol={r.symbol} size={34} className="flex-1 text-[13px]" sub={r.sellTradeId.startsWith("expired:") ? "หมดอายุ " + tradeTime(r.sellAt) : "ขาย " + tradeTime(r.sellAt)} />
+                  <strong className={`flex items-center gap-1 text-[13px] font-medium whitespace-nowrap ${tone(r.pnl)}`}>
+                    {r.pnl >= 0 ? <ArrowUpRight size={14} aria-hidden="true" /> : <ArrowDownRight size={14} aria-hidden="true" />}
+                    {money(r.pnl, currency, { sign: true })}
+                  </strong>
                 </div>
               ))}
             </div>
@@ -212,7 +210,8 @@ function SymbolBars({ rows, currency }: { rows: ReturnType<typeof groupPnl>; cur
         g ? (
           <div key={g.key}>
             <div className="flex items-center gap-2 text-xs">
-              <strong className="font-medium">{g.key}</strong>
+              <TickerLogo symbol={g.key} size={20} />
+              <strong className="font-medium">{tickerLabel(g.key)}</strong>
               <span className="text-[11px] text-muted">
                 {g.count} เทรด · win {pct(g.wins / g.count)}
               </span>

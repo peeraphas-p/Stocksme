@@ -168,3 +168,32 @@ describe("same-timestamp ordering by sequence number", () => {
     expect(r.open[0].avgCostUsd).toBe(80);
   });
 });
+
+describe("expired options", () => {
+  const opt = "AMZN250919C00247500"; // หมดอายุ 19 ก.ย. 2025
+  const buy = t("BUY", 1, 20, "2025-09-15T14:00:00.000Z", { symbol: opt, fx_rate: 33 });
+
+  it("closes an expired option with no sale at $0 on its expiry date", () => {
+    const r = computePnl([buy], 35, new Date("2026-11-16T12:00:00Z"));
+    expect(r.open).toEqual([]);
+    expect(r.closed).toEqual([
+      expect.objectContaining({ symbol: opt, qty: 1, sellPrice: 0, pnlUsd: -20, pnlThb: -660, expired: true, sellAt: "2025-09-19T14:00:00.000Z" }),
+    ]);
+  });
+
+  it("keeps it open until the expiry day has passed", () => {
+    expect(computePnl([buy], 35, new Date("2025-09-19T19:00:00Z")).open).toHaveLength(1); // expiry day itself
+    expect(computePnl([buy], 35, new Date("2025-09-20T15:00:00Z")).open).toHaveLength(0);
+  });
+
+  it("leaves an option that was sold before expiry alone", () => {
+    const r = computePnl([buy, t("SELL", 1, 35, "2025-09-17T14:00:00.000Z", { symbol: opt })], 35, new Date("2026-11-16T12:00:00Z"));
+    expect(r.closed).toHaveLength(1);
+    expect(r.closed[0]).toMatchObject({ pnlUsd: 15 });
+    expect(r.closed[0].expired).toBeUndefined();
+  });
+
+  it("does not touch ordinary stocks", () => {
+    expect(computePnl([t("BUY", 1, 10, "2020-01-02T15:00:00Z")], 35, new Date("2026-11-16T12:00:00Z")).open).toHaveLength(1);
+  });
+});

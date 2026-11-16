@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CircleCheck, FileSpreadsheet, History, Info, Undo2, Upload } from "lucide-react";
+import { Ticker } from "@/components/Ticker";
 import { Empty, ErrorBox, Note, PageHeader } from "@/components/ui";
 import { deleteBatch, importTrades, useBatches } from "@/lib/data";
 import { dateTime, price, qty, tradeTime } from "@/lib/format";
@@ -246,7 +247,7 @@ export default function ImportPage() {
                   {curRes.good.slice(0, 6).map(({ trade: t, line }) => (
                     <tr key={line} className="border-t border-border">
                       <td className="py-1 whitespace-nowrap">{tradeTime(t!.executed_at)}</td>
-                      <td className="py-1 font-medium">{t!.symbol}</td>
+                      <td className="py-1"><Ticker symbol={t!.symbol} size={22} /></td>
                       <td className={`py-1 ${t!.side === "BUY" ? "text-gain" : "text-loss"}`}>{t!.side === "BUY" ? "ซื้อ" : "ขาย"}</td>
                       <td className="py-1 text-right">{qty(t!.qty)}</td>
                       <td className="py-1 text-right">{price(t!.price_usd)}</td>
