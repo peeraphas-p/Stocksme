@@ -9,6 +9,7 @@ import { Ticker, TickerLogo, tickerLabel } from "@/components/Ticker";
 import { CurrencyToggle, Empty, ErrorBox, PageHeader, Segmented, Stat } from "@/components/ui";
 import { money, pct, tone, tradeTime } from "@/lib/format";
 import { dailyPnl, equityCurve, filterByPeriod, groupPnl, localDay, roundTrips, summarize, type Period } from "@/lib/stats";
+import { totals, usePrices, valuePositions } from "@/lib/prices";
 import { useApp } from "@/lib/useApp";
 
 const PERIODS: { value: Period; label: string }[] = [
@@ -41,6 +42,8 @@ export default function Dashboard() {
   }, [pnl.closed, currency]);
 
   const cost = lots.reduce((sum, l) => sum + (currency === "USD" ? l.costUsd : l.costThb), 0);
+  const quotes = usePrices(pnl.open.map((o) => o.symbol));
+  const live = useMemo(() => totals(valuePositions(pnl.open, quotes.prices, app.latestFx)), [pnl.open, quotes.prices, app.latestFx]);
   const openCost = pnl.open.reduce((sum, o) => sum + (currency === "USD" ? o.costUsd : o.costThb), 0);
   const grossWin = s.avgWin * s.wins;
   const grossLoss = s.avgLoss * s.losses;
@@ -100,7 +103,16 @@ export default function Dashboard() {
             </span>
             <span className="flex flex-col">
               <strong className="text-xs font-medium">ถืออยู่ {pnl.open.length} ตัว</strong>
-              <span className="text-[11px] text-muted">ทุน {money(openCost, currency)}</span>
+              <span className="text-[11px] text-muted">
+                {live.priced > 0 ? (
+                  <>
+                    มูลค่า {money(currency === "USD" ? live.marketUsd : live.marketUsd * app.latestFx, currency)} ·{" "}
+                    <span className={tone(live.unrealizedUsd)}>{money(currency === "USD" ? live.unrealizedUsd : live.unrealizedThb, currency, { sign: true })} ยังไม่ได้ขาย</span>
+                  </>
+                ) : (
+                  <>ทุน {money(openCost, currency)}</>
+                )}
+              </span>
             </span>
             <span className="ml-auto grid h-9 w-9 place-items-center rounded-full bg-bg">
               <ArrowUpRight size={18} aria-hidden="true" />

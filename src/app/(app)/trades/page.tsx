@@ -8,6 +8,7 @@ import { CurrencyToggle, Empty, ErrorBox, Note, PageHeader, Segmented, Sheet } f
 import { deleteTrade } from "@/lib/data";
 import { holding, money, price, qty, tone, tradeTime } from "@/lib/format";
 import { parseOption } from "@/lib/options";
+import { usePrices, valuePositions } from "@/lib/prices";
 import { useApp } from "@/lib/useApp";
 import type { Trade } from "@/lib/types";
 
@@ -26,7 +27,9 @@ export default function TradesPage() {
 
   const all = useMemo(() => [...app.trades].reverse().filter((t) => match(t.symbol)), [app.trades, query]); // eslint-disable-line react-hooks/exhaustive-deps
   const closed = pnl.closed.filter((l) => match(l.symbol));
-  const open = pnl.open.filter((o) => match(o.symbol));
+  const quotes = usePrices(pnl.open.map((o) => o.symbol));
+  const valued = useMemo(() => valuePositions(pnl.open, quotes.prices, app.latestFx), [pnl.open, quotes.prices, app.latestFx]);
+  const open = valued.filter((o) => match(o.symbol));
 
   async function remove(t: Trade) {
     if (!confirm(`ลบรายการ ${t.side === "BUY" ? "ซื้อ" : "ขาย"} ${t.symbol} ${qty(t.qty)} หุ้น?`)) return;
@@ -139,8 +142,33 @@ export default function TradesPage() {
                       {qty(o.qty)} {opt ? "สัญญา" : "หุ้น"}
                     </span>
                   </div>
-                  <div className="big-number mt-3 text-[22px]">{money(currency === "USD" ? o.costUsd : o.costThb, currency)}</div>
-                  <div className="mt-1 text-xs text-muted">ทุนรวม · เฉลี่ย {price(o.avgCostUsd)} ต่อ{opt ? "สัญญา" : "หุ้น"}</div>
+                  {o.marketUsd != null ? (
+                    <>
+                      <div className="big-number mt-3 text-[22px]">{money(currency === "USD" ? o.marketUsd : o.marketUsd * app.latestFx, currency)}</div>
+                      <div className={`mt-1 text-xs font-medium ${tone(o.unrealizedUsd!)}`}>
+                        {money(currency === "USD" ? o.unrealizedUsd! : o.unrealizedThb!, currency, { sign: true })}
+                        {o.unrealizedPct != null && ` (${o.unrealizedPct >= 0 ? "+" : ""}${(o.unrealizedPct * 100).toFixed(2)}%)`}
+                        <span className="font-normal text-muted"> ยังไม่ได้ขาย</span>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-muted">
+                        <span>
+                          ราคาล่าสุด <b className="font-medium text-fg">{price(o.quote!.price)}</b>
+                          {o.dayChangeUsd != null && <span className={tone(o.dayChangeUsd)}> {o.dayChangeUsd >= 0 ? "▲" : "▼"}</span>}
+                        </span>
+                        <span>
+                          ทุน <b className="font-medium text-fg">{money(currency === "USD" ? o.costUsd : o.costThb, currency)}</b> · เฉลี่ย {price(o.avgCostUsd)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="big-number mt-3 text-[22px]">{money(currency === "USD" ? o.costUsd : o.costThb, currency)}</div>
+                      <div className="mt-1 text-xs text-muted">
+                        ทุนรวม · เฉลี่ย {price(o.avgCostUsd)} ต่อ{opt ? "สัญญา" : "หุ้น"}
+                        {!opt && (quotes.loading ? " · กำลังโหลดราคา…" : " · ไม่มีราคาล่าสุด")}
+                      </div>
+                    </>
+                  )}
                   <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-[11px] text-muted">
                     <CalendarClock size={13} aria-hidden="true" />
                     ซื้อครั้งแรก {tradeTime(o.firstBuyAt)}
