@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Plus, X } from "lucide-react";
+import { Download, Languages, Plus, X } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
+import { LanguageList } from "@/components/LanguagePicker";
+import { useI18n } from "@/i18n/client";
 import { AppearanceControls } from "@/components/AppShell";
 import { CurrencyToggle, PageHeader } from "@/components/ui";
 import { saveProfile } from "@/lib/data";
@@ -16,6 +18,9 @@ function csvCell(v: unknown) {
 
 export default function SettingsPage() {
   const app = useApp();
+  const i18n = useI18n();
+  const { m } = i18n;
+  const s = m.settings;
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
@@ -25,10 +30,10 @@ export default function SettingsPage() {
   async function persist(p: { strategy_tags?: string[]; default_currency?: Currency }) {
     try {
       await saveProfile(p);
-      setMsg("บันทึกแล้ว");
+      setMsg(s.saved);
       app.reloadProfile();
     } catch (e) {
-      setMsg("บันทึกไม่สำเร็จ: " + String((e as { message?: string }).message ?? e));
+      setMsg(i18n.t(s.saveFailed, { e: String((e as { message?: string }).message ?? e) }));
     }
   }
 
@@ -60,13 +65,13 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="บัญชีและค่าเริ่มต้น" title="ตั้งค่า" />
+      <PageHeader eyebrow={s.eyebrow} title={s.title} />
       {msg && <div className="text-[13px] text-muted">{msg}</div>}
 
       <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:items-start">
       <AccountCard />
       <div className="card space-y-2">
-        <h2 className="text-sm font-semibold tracking-tight">สกุลเงินเริ่มต้น</h2>
+        <h2 className="text-sm font-semibold tracking-tight">{s.defaultCurrency}</h2>
         <CurrencyToggle
           value={app.profile.default_currency}
           onChange={(c) => {
@@ -74,41 +79,52 @@ export default function SettingsPage() {
             persist({ default_currency: c });
           }}
         />
-        <p className="text-xs text-muted">อัตรา ฿/$ ล่าสุด: {app.latestFx.toFixed(2)} (ใช้กับรายการที่ไม่มีอัตราบันทึกไว้)</p>
+        <p className="text-xs text-muted">{i18n.t(s.fxNote, { v: app.latestFx.toFixed(2) })}</p>
       </div>
 
       <div className="card space-y-3">
-        <h2 className="text-sm font-semibold tracking-tight">กลยุทธ์ (Playbook)</h2>
+        <div>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold tracking-tight">
+            <Languages size={15} aria-hidden="true" />
+            {m.common.language}
+          </h2>
+          <p className="text-xs text-muted">{s.languageDesc}</p>
+        </div>
+        <LanguageList />
+      </div>
+
+      <div className="card space-y-3">
+        <h2 className="text-sm font-semibold tracking-tight">{s.playbook}</h2>
         <div className="flex flex-wrap gap-2">
           {tags.map((t) => (
             <span key={t} className="chip">
               {t}
-              <button className="-mr-1 ml-1 grid h-4 w-4 place-items-center rounded-full text-muted hover:text-loss cursor-pointer" onClick={() => removeTag(t)} aria-label={`ลบ ${t}`}>
+              <button className="-mr-1 ml-1 grid h-4 w-4 place-items-center rounded-full text-muted hover:text-loss cursor-pointer" onClick={() => removeTag(t)} aria-label={i18n.t(s.removeTag, { t })}>
                 <X size={12} />
               </button>
             </span>
           ))}
         </div>
         <div className="flex gap-2">
-          <input className="input" placeholder="เพิ่มกลยุทธ์ใหม่" value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTag()} />
+          <input className="input" placeholder={s.newTag} value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTag()} />
           <button className="btn" onClick={addTag}>
             <Plus size={15} aria-hidden="true" />
-            เพิ่ม
+            {m.common.add}
           </button>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="mb-1 text-sm font-semibold tracking-tight">หน้าตาแอป</h2>
-        <p className="mb-4 text-xs text-muted">กระจก พื้นหลัง และธีม · บันทึกไว้ในเครื่องนี้</p>
+        <h2 className="mb-1 text-sm font-semibold tracking-tight">{m.appearance.settingsTitle}</h2>
+        <p className="mb-4 text-xs text-muted">{m.appearance.settingsDesc}</p>
         <AppearanceControls />
       </div>
 
       <div className="card space-y-2">
-        <h2 className="text-sm font-semibold tracking-tight">สำรองข้อมูล</h2>
+        <h2 className="text-sm font-semibold tracking-tight">{s.backup}</h2>
         <button className="btn" onClick={exportCsv} disabled={app.trades.length === 0}>
           <Download size={15} aria-hidden="true" />
-          ดาวน์โหลดรายการซื้อขาย (CSV)
+          {s.downloadCsv}
         </button>
       </div>
 

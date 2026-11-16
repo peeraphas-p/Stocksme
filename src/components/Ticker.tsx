@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { parseOption } from "@/lib/options";
+import { useI18n } from "@/i18n/client";
 
 /** ชื่อที่อ่านง่าย: ออปชัน AMZN250919C00247500 → "AMZN Call $247.5" */
 export function tickerLabel(symbol: string) {
@@ -59,6 +60,7 @@ export function TickerLogo({ symbol, size = 28 }: { symbol: string; size?: numbe
 /** โลโก้ + ชื่อหุ้น (+ รายละเอียดออปชัน) */
 export function Ticker({ symbol, size = 28, sub, className = "" }: { symbol: string; size?: number; sub?: React.ReactNode; className?: string }) {
   const o = parseOption(symbol);
+  const { fmt } = useI18n();
   return (
     <span className={`flex min-w-0 items-center gap-2.5 ${className}`}>
       <TickerLogo symbol={symbol} size={size} />
@@ -66,7 +68,7 @@ export function Ticker({ symbol, size = 28, sub, className = "" }: { symbol: str
         <span className="truncate font-medium">{o ? o.underlying : symbol}</span>
         {(o || sub) && (
           <span className="truncate text-[11px] font-normal text-muted">
-            {o ? `${o.type} $${o.strike} · ${new Date(o.expiry + "T00:00:00").toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" })}` : null}
+            {o ? `${o.type} $${o.strike} · ${fmt.day(o.expiry)}` : null}
             {o && sub ? " · " : null}
             {sub}
           </span>

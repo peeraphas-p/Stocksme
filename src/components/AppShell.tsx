@@ -18,26 +18,31 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
+import LanguagePicker from "@/components/LanguagePicker";
+import { useI18n } from "@/i18n/client";
+import type { Messages } from "@/i18n/messages/th";
 import { BrandMark, Wordmark } from "@/components/Brand";
 import { GLASS_PRESETS, useAppearance, useResolvedDark, type Appearance } from "@/lib/appearance";
 
-const NAV: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: "/", label: "ภาพรวม", icon: Home },
-  { href: "/trades", label: "รายการ", icon: ReceiptText },
-  { href: "/cash", label: "เงิน", icon: Wallet },
-  { href: "/journal", label: "บันทึก", icon: NotebookPen },
-  { href: "/reports", label: "รายงาน", icon: ChartNoAxesCombined },
-  { href: "/import", label: "นำเข้า", icon: Upload },
+const NAV: { href: string; key: keyof Messages["nav"]; icon: LucideIcon }[] = [
+  { href: "/", key: "overview", icon: Home },
+  { href: "/trades", key: "trades", icon: ReceiptText },
+  { href: "/cash", key: "cash", icon: Wallet },
+  { href: "/journal", key: "journal", icon: NotebookPen },
+  { href: "/reports", key: "reports", icon: ChartNoAxesCombined },
+  { href: "/import", key: "import", icon: Upload },
 ];
 
 function Dock({ path, compact = false }: { path: string; compact?: boolean }) {
+  const { m } = useI18n();
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
   return (
     <nav
-      aria-label="เมนูหลัก"
+      aria-label={m.nav.main}
       className={`glass flex items-center gap-0.5 ${compact ? "w-full justify-between rounded-[18px] p-1" : "rounded-full p-[5px]"}`}
     >
-      {NAV.map(({ href, label, icon: Icon }) => {
+      {NAV.map(({ href, key, icon: Icon }) => {
+        const label = m.nav[key];
         const on = active(href);
         return (
           <Link
@@ -57,16 +62,21 @@ function Dock({ path, compact = false }: { path: string; compact?: boolean }) {
   );
 }
 
-const SLIDERS: { key: keyof Pick<Appearance, "blur" | "opacity" | "saturation" | "edge">; label: string; min: number; max: number; step: number; show: (v: number) => string }[] = [
-  { key: "blur", label: "ความเบลอ", min: 0, max: 40, step: 1, show: (v) => `${Math.round(v)} px` },
-  { key: "opacity", label: "ความทึบ", min: 0.08, max: 0.9, step: 0.01, show: (v) => `${Math.round(v * 100)}%` },
-  { key: "saturation", label: "ความสดของสี", min: 0.5, max: 2, step: 0.05, show: (v) => `${Math.round(v * 100)}%` },
-  { key: "edge", label: "แสงขอบ", min: 0, max: 1, step: 0.05, show: (v) => `${Math.round(v * 100)}%` },
+const SLIDERS: { key: keyof Pick<Appearance, "blur" | "opacity" | "saturation" | "edge">; min: number; max: number; step: number; show: (v: number) => string }[] = [
+  { key: "blur", min: 0, max: 40, step: 1, show: (v) => `${Math.round(v)} px` },
+  { key: "opacity", min: 0.08, max: 0.9, step: 0.01, show: (v) => `${Math.round(v * 100)}%` },
+  { key: "saturation", min: 0.5, max: 2, step: 0.05, show: (v) => `${Math.round(v * 100)}%` },
+  { key: "edge", min: 0, max: 1, step: 0.05, show: (v) => `${Math.round(v * 100)}%` },
 ];
+const PRESET_KEY = { clear: "presetClear", frosted: "presetFrosted", solid: "presetSolid" } as const;
+const BG_KEY = { ledger: "bgLedger", stars: "bgStars", room: "bgRoom", plain: "bgPlain" } as const;
+const THEME_KEY = { system: "themeSystem", light: "themeLight", dark: "themeDark" } as const;
 
 /** ตัวปรับกระจก/ธีม/พื้นหลัง — ใช้ทั้งในแผงบน top bar และหน้าตั้งค่า */
 export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean }) {
   const [a, set] = useAppearance();
+  const { m } = useI18n();
+  const ap = m.appearance;
   const first = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (autoFocus) first.current?.focus();
@@ -75,8 +85,8 @@ export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean 
     <>
       <div className="mb-4 grid grid-cols-3 gap-1.5">
         {GLASS_PRESETS.map((p, i) => (
-          <button key={p.name} ref={i === 0 ? first : undefined} className="btn py-1.5 text-xs" onClick={() => set(p.value)}>
-            {p.name}
+          <button key={p.id} ref={i === 0 ? first : undefined} className="btn py-1.5 text-xs" onClick={() => set(p.value)}>
+            {ap[PRESET_KEY[p.id]]}
           </button>
         ))}
       </div>
@@ -84,7 +94,7 @@ export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean 
       {SLIDERS.map((s) => (
         <label key={s.key} className="mb-3.5 block text-xs">
           <span className="flex justify-between">
-            {s.label}
+            {ap[s.key]}
             <output className="text-muted">{s.show(a[s.key])}</output>
           </span>
           <input
@@ -100,60 +110,54 @@ export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean 
       ))}
 
       <div className="mt-4 flex items-center justify-between gap-3 text-xs">
-        <span>พื้นหลัง</span>
-        <div className="segment" role="group" aria-label="พื้นหลัง">
-          {(
-            [
-              ["ledger", "สมุดกราฟ"],
-              ["stars", "ดาว"],
-              ["room", "รูปห้อง"],
-              ["plain", "สีเรียบ"],
-            ] as const
-          ).map(([bg, label]) => (
+        <span>{ap.background}</span>
+        <div className="segment" role="group" aria-label={ap.background}>
+          {(["ledger", "stars", "room", "plain"] as const).map((bg) => (
             <button key={bg} aria-pressed={a.background === bg} onClick={() => set({ background: bg })}>
-              {label}
+              {ap[BG_KEY[bg]]}
             </button>
           ))}
         </div>
       </div>
       {a.background === "stars" ? (
-        <p className="mt-3 text-[11px] text-muted">พื้นหลังดาวใช้ธีมมืดเสมอ และเบลอได้สูงสุด 3px เพื่อให้เห็นดาว — เลือกพื้นหลังอื่นเพื่อใช้ธีมสว่างหรือเบลอมากกว่านี้</p>
+        <p className="mt-3 text-[11px] text-muted">{ap.starsNote}</p>
       ) : (
       <div className="mt-3 flex items-center justify-between gap-3 text-xs">
-        <span>ธีม</span>
-        <div className="segment" role="group" aria-label="ธีม">
+        <span>{ap.theme}</span>
+        <div className="segment" role="group" aria-label={ap.theme}>
           {(["system", "light", "dark"] as const).map((t) => (
             <button key={t} aria-pressed={a.theme === t} onClick={() => set({ theme: t })}>
-              {t === "system" ? "ตามเครื่อง" : t === "light" ? "สว่าง" : "มืด"}
+              {ap[THEME_KEY[t]]}
             </button>
           ))}
         </div>
       </div>
       )}
       <button className="btn mt-5 w-full text-xs" onClick={() => set({ ...GLASS_PRESETS[1].value, background: "ledger" })}>
-        คืนค่าเริ่มต้น
+        {ap.reset}
       </button>
     </>
   );
 }
 
 function GlassPanel({ onClose }: { onClose: () => void }) {
+  const { m } = useI18n();
   return (
     <aside
-      aria-label="ปรับหน้าตา"
+      aria-label={m.appearance.title}
       className="glass absolute right-0 top-[calc(100%+10px)] z-40 w-[min(310px,calc(100vw-24px))] rounded-[22px] p-5"
       style={{ background: "color-mix(in srgb, var(--panel) 94%, transparent)" }}
     >
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-base font-medium">
           <Settings2 size={17} aria-hidden="true" />
-          ปรับหน้าตา
+          {m.appearance.title}
         </h2>
-        <button className="icon-btn" onClick={onClose} aria-label="ปิด">
+        <button className="icon-btn" onClick={onClose} aria-label={m.common.close}>
           <X size={17} />
         </button>
       </div>
-      <p className="mt-1 mb-4 text-xs text-muted">ปรับกระจกทั้งแอป บันทึกไว้ในเครื่องนี้</p>
+      <p className="mt-1 mb-4 text-xs text-muted">{m.appearance.desc}</p>
       <AppearanceControls autoFocus />
     </aside>
   );
@@ -161,6 +165,7 @@ function GlassPanel({ onClose }: { onClose: () => void }) {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const { m } = useI18n();
   const [appearance, setAppearance] = useAppearance();
   const dark = useResolvedDark(appearance);
   const [panel, setPanel] = useState(false);
@@ -189,23 +194,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <BrandMark size={28} className="-my-1" />
             <Wordmark className="text-[17px]" />
             <span className="hidden h-4 w-px bg-[var(--border)] sm:block" />
-            <span className="hidden text-xs text-muted sm:block">บันทึกการเทรด</span>
+            <span className="hidden text-xs text-muted lg:block">{m.nav.tagline}</span>
           </Link>
-          <div className="flex items-center gap-1 sm:gap-2" ref={panelWrap}>
+          <div className="flex items-center gap-0.5 sm:gap-1.5" ref={panelWrap}>
+            <LanguagePicker />
             <button
               className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-[13px] hover:bg-[var(--hover)] cursor-pointer"
               aria-expanded={panel}
               onClick={() => setPanel(!panel)}
             >
               <Settings2 size={16} aria-hidden="true" />
-              <span className="hidden sm:inline">ปรับหน้าตา</span>
+              <span className="hidden md:inline">{m.nav.adjustLook}</span>
             </button>
             {appearance.background !== "stars" && (
-              <button className="icon-btn" aria-label={dark ? "เปลี่ยนเป็นธีมสว่าง" : "เปลี่ยนเป็นธีมมืด"} onClick={() => setAppearance({ theme: dark ? "light" : "dark" })}>
+              <button className="icon-btn" aria-label={dark ? m.nav.toLight : m.nav.toDark} onClick={() => setAppearance({ theme: dark ? "light" : "dark" })}>
                 {dark ? <Sun size={17} /> : <Moon size={17} />}
               </button>
             )}
-            <Link href="/settings" className={`icon-btn ${path.startsWith("/settings") ? "bg-[var(--hover)]" : ""}`} aria-label="ตั้งค่า" title="ตั้งค่า">
+            <Link href="/settings" className={`icon-btn ${path.startsWith("/settings") ? "bg-[var(--hover)]" : ""}`} aria-label={m.nav.settings} title={m.nav.settings}>
               <Settings size={17} />
             </Link>
             <AccountMenu />

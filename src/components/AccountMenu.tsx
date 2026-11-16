@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LogOut, Settings } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import { useI18n } from "@/i18n/client";
 
 /** วงกลมตัวอักษรแรกของอีเมล → เมนูบัญชี (อีเมล, ตั้งค่า, ออกจากระบบ) */
 export default function AccountMenu() {
   const router = useRouter();
+  const { m } = useI18n();
   const [email, setEmail] = useState("");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -47,7 +49,7 @@ export default function AccountMenu() {
         style={{ background: "color-mix(in srgb, var(--cta) 26%, var(--panel))" }}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="เมนูบัญชี"
+        aria-label={m.nav.accountMenu}
         onClick={() => setOpen(!open)}
       >
         {email.slice(0, 1).toUpperCase()}
@@ -59,16 +61,16 @@ export default function AccountMenu() {
           style={{ background: "color-mix(in srgb, var(--panel) 95%, transparent)" }}
         >
           <div className="px-3 pt-2 pb-3">
-            <div className="text-[11px] text-muted">ล็อกอินอยู่ในชื่อ</div>
+            <div className="text-[11px] text-muted">{m.nav.signedInAs}</div>
             <div className="truncate text-[13px] font-medium">{email}</div>
           </div>
           <Link role="menuitem" href="/settings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-[13px] hover:bg-[var(--hover)]">
             <Settings size={15} aria-hidden="true" />
-            ตั้งค่าและบัญชี
+            {m.nav.settingsAccount}
           </Link>
           <button role="menuitem" onClick={signOut} disabled={busy} className="btn btn-danger mt-1.5 w-full justify-start">
             <LogOut size={15} aria-hidden="true" />
-            {busy ? "กำลังออก…" : "ออกจากระบบ"}
+            {busy ? m.nav.signingOut : m.nav.signOut}
           </button>
         </div>
       )}

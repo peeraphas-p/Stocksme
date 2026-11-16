@@ -3,6 +3,9 @@ import type { Currency } from "./types";
 
 export type Period = "today" | "week" | "month" | "year" | "all";
 
+/** key ของกลุ่มที่ไม่ได้ระบุค่า (เช่น ไม่ได้ใส่กลยุทธ์) — หน้าเว็บแสดงเป็น common.unspecified */
+export const NONE_KEY = "__none__";
+
 /** YYYY-MM-DD ตามเวลาเครื่อง */
 export function localDay(iso: string | Date): string {
   const d = typeof iso === "string" ? new Date(iso) : iso;
@@ -127,7 +130,7 @@ function groupRoundTripsBy(lots: ClosedLot[], c: Currency, key: (l: ClosedLot) =
     cur.pnl += pnlOf(l, c);
     if (l.costUsd > cur.weight) {
       cur.weight = l.costUsd;
-      cur.key = key(l) ?? "(ไม่ระบุ)";
+      cur.key = key(l) ?? NONE_KEY;
     }
     trips.set(l.sellTradeId, cur);
   }
@@ -170,14 +173,14 @@ export function rSummary(lots: ClosedLot[]): RSummary {
   };
 }
 
-/** ช่วงของ R สำหรับรายงาน (มีเลขนำหน้าไว้เรียงลำดับ) */
+/** ช่วงของ R สำหรับรายงาน เป็นรหัส "1"–"6" (เรียงลำดับได้) — หน้าเว็บแปลงเป็นข้อความ reports.r1–r6 */
 export function rBucket(r: number | null): string {
-  if (r == null) return "6. ไม่ได้วาง stop";
-  if (r < -1.05) return "1. ขาดทุนเกินแผน (< −1R)";
-  if (r < 0) return "2. ขาดทุนตามแผน (−1R ถึง 0)";
-  if (r < 1) return "3. กำไรน้อย (0 ถึง 1R)";
-  if (r < 2) return "4. กำไร 1R ถึง 2R";
-  return "5. กำไร 2R ขึ้นไป";
+  if (r == null) return "6";
+  if (r < -1.05) return "1";
+  if (r < 0) return "2";
+  if (r < 1) return "3";
+  if (r < 2) return "4";
+  return "5";
 }
 
 export interface YearRow {

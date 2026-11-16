@@ -5,112 +5,131 @@
 <h1 align="center">Stocks<em>me</em></h1>
 
 <p align="center">
-  สมุดบันทึกการเทรดหุ้น US ส่วนตัว — กำไรขาดทุนจริงทั้ง USD และบาท<br>
+  A personal journal for US stock trading — real profit and loss in both USD and Thai baht.<br>
   <a href="https://github.com/peeraphas-p/Stocksme/actions/workflows/ci.yml"><img src="https://github.com/peeraphas-p/Stocksme/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
+<p align="center">English · <a href="#ภาษาไทย">ภาษาไทย</a></p>
+
 ---
 
-## ทำอะไรได้
+## Features
 
-- **ภาพรวม:** กำไร/ขาดทุนสุทธิหลังหักค่าธรรมเนียม, กราฟกำไรสะสม, Win rate, Profit factor, กำไรเฉลี่ยต่อขาดทุนเฉลี่ย, ปฏิทินกำไรรายวัน, ผลตามหุ้น
-- **รายการซื้อขาย:** ไม้ที่ปิดแล้ว (จับคู่ FIFO), หุ้นที่ถืออยู่พร้อมราคาล่าสุดและกำไร/ขาดทุนที่ยังไม่ได้ขาย, รายการทั้งหมด พร้อมโลโก้หุ้น
-- **บัญชีเงิน:** ฝาก/ถอน (พร้อมยอดบาทจริง), ปันผล, ภาษีหัก ณ ที่จ่าย, ดอกเบี้ย → เงินฝากสุทธิ, ผลตอบแทนรวม, เงินสดคงเหลือ
-- **แผนความเสี่ยง:** ตั้ง stop-loss / เป้าหมายตอนซื้อ แล้วดูผลเป็น R-multiple และวินัยตามแผน
-- **รายงาน:** แยกผลตามกลยุทธ์ (playbook), อารมณ์ตอนเทรด, วันในสัปดาห์, ชั่วโมงที่เข้า (เวลานิวยอร์ก), ระยะเวลาถือ, R-multiple และสรุปรายปีเป็นบาทพร้อม CSV ต่อปี
-- **บัญชีผู้ใช้:** สมัคร/ล็อกอิน, ลืมรหัสผ่าน, เปลี่ยนรหัสผ่าน, ดาวน์โหลดข้อมูลทั้งหมด (JSON), ลบบัญชีถาวร; มีหน้าแรก นโยบายความเป็นส่วนตัว และเงื่อนไขการใช้งาน
-- **สมุดบันทึก:** แผน เหตุผลเข้า-ออก บทเรียน และคะแนนวินัยของแต่ละวัน
-- **นำเข้าไฟล์:** Dime (ชีตรายการซื้อ + รายการขายในไฟล์เดียว), Webull, CSV/Excel ทั่วไปที่จับคู่คอลัมน์เองได้; ข้ามรายการซ้ำอัตโนมัติ และย้อนการนำเข้าได้
-- **ออปชัน:** อ่านสัญลักษณ์แบบ OCC (เช่น `AMZN250919C00247500`) และปิดให้อัตโนมัติที่ $0 เมื่อหมดอายุโดยไม่มีรายการขาย
-- **ใช้บนมือถือได้:** ติดตั้งลงหน้าจอโฮมได้ (PWA), ธีมสว่าง/มืด, ปรับกระจก/พื้นหลังได้
+- **Overview:** net P/L after fees, cumulative P/L chart, win rate, profit factor, average win vs. average loss, daily P/L calendar, results per stock
+- **Trades:** closed trades (FIFO matching), open positions with latest price and unrealized P/L, and every buy and sell, with stock logos
+- **Cash:** deposits and withdrawals (with the actual baht amount), dividends, withholding tax and interest → net deposits, total return, estimated cash left
+- **Risk plan:** set a stop-loss and target when you buy, then see each trade as an R-multiple and how well you kept to the plan
+- **Reports:** results by strategy (playbook), emotion, weekday, entry hour (New York time), holding time and R-multiple, plus a yearly summary in baht with a CSV per year
+- **Journal:** plan, reasons for entry and exit, lessons and a discipline rating for each day
+- **Import:** Dime (buy and sell sheets in one file), Webull, and any CSV/Excel file with column mapping; duplicates are skipped automatically and imports can be undone
+- **Options:** reads OCC symbols (e.g. `AMZN250919C00247500`) and closes them at $0 automatically when they expire without a sale
+- **Accounts:** sign up and sign in, password reset and change, download all data (JSON), delete the account permanently; landing page, privacy policy and terms
+- **Languages:** English and Thai, switchable from the top bar or Settings (flag beside each language). On a first visit, people in Thailand see Thai and everyone else sees English
+- **Mobile:** install to the home screen (PWA), light and dark themes, adjustable glass and backgrounds
 
-## เทคโนโลยี
+## Tech stack
 
-Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Supabase (Postgres + Auth + Row Level Security) · Recharts · decimal.js · lucide-react · Vitest · Netlify
+Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Supabase (Postgres + Auth + Row Level Security) · Recharts · decimal.js · lucide-react · country-flag-icons · Vitest · Netlify
 
-## เริ่มใช้งานบนเครื่อง
+## Run locally
 
-ต้องมี Node.js 22 ขึ้นไป (ดู `.nvmrc`)
+Requires Node.js 22 or newer (see `.nvmrc`).
 
-1. สร้างโปรเจกต์ฟรีที่ [supabase.com](https://supabase.com)
-2. Supabase → **SQL Editor** → วางไฟล์ [`supabase/schema.sql`](supabase/schema.sql) → **Run** (รันซ้ำได้)
-3. Supabase → **Authentication → Sign In / Providers → Email**: เปิด Email provider, ปิด *Confirm email* (ถ้าใช้คนเดียว)
-4. Supabase → **Project Settings → API Keys** → คัดลอก Project URL และคีย์ **Publishable** (หรือ anon) — ห้ามใช้คีย์ Secret
-5. คัดลอก `.env.local.example` เป็น `.env.local` แล้วใส่ค่าทั้งสอง
-6. รัน แล้วเปิด http://localhost:3000 → สมัครสมาชิก
+1. Create a free project at [supabase.com](https://supabase.com).
+2. Supabase → **SQL Editor** → paste [`supabase/schema.sql`](supabase/schema.sql) → **Run** (safe to run again).
+3. Supabase → **Authentication → Sign In / Providers → Email**: turn on the Email provider and, for a single user, turn off *Confirm email*.
+4. Supabase → **Project Settings → API Keys** → copy the Project URL and the **Publishable** (or anon) key. Never use the Secret key.
+5. Copy `.env.local.example` to `.env.local` and fill in both values.
+6. Start it and open http://localhost:3000 → sign up.
 
    ```bash
    npm install
    npm run dev
    ```
 
-## ขึ้นออนไลน์ด้วย Netlify
+## Deploy on Netlify
 
-1. Netlify → **Add new project → Import from GitHub** → เลือก repo นี้ (ค่า build อ่านจาก [`netlify.toml`](netlify.toml))
-2. **Project configuration → Environment variables** → เพิ่ม `NEXT_PUBLIC_SUPABASE_URL` และ `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ค่าเดียวกับ `.env.local`)
-3. **Deploys → Trigger deploy → Deploy site** — ค่า `NEXT_PUBLIC_` ถูกฝังตอน build จึงต้อง deploy ใหม่ทุกครั้งที่แก้
+1. Netlify → **Add new project → Import from GitHub** → choose this repo (build settings come from [`netlify.toml`](netlify.toml)).
+2. **Project configuration → Environment variables** → add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (same values as `.env.local`).
+3. **Deploys → Trigger deploy → Deploy site**. `NEXT_PUBLIC_` values are baked in at build time, so redeploy after every change.
 4. Supabase → **Authentication → URL Configuration**
-   - **Site URL:** `https://<ชื่อเว็บ>.netlify.app`
-   - **Redirect URLs:** `https://<ชื่อเว็บ>.netlify.app/**` และ `http://localhost:3000/**`
+   - **Site URL:** `https://<your-site>.netlify.app`
+   - **Redirect URLs:** `https://<your-site>.netlify.app/**` and `http://localhost:3000/**`
 
-push ขึ้น `main` = deploy ใหม่อัตโนมัติ, pull request = ได้ deploy preview
+Pushing to `main` deploys automatically; pull requests get a deploy preview.
 
-## อัปเดตฐานข้อมูล
+## Database updates
 
-การเปลี่ยน schema อยู่ใน [`supabase/migrations/`](supabase/migrations) เรียงตามเลขไฟล์ ทุกไฟล์รันซ้ำได้โดยไม่ลบข้อมูล
+Schema changes live in [`supabase/migrations/`](supabase/migrations), in file-number order. Every file can be re-run without losing data.
 
-- โปรเจกต์ที่มีอยู่แล้ว: รันเฉพาะไฟล์ที่ยังไม่เคยรันใน SQL Editor
-- โปรเจกต์ใหม่: รัน `supabase/schema.sql` ไฟล์เดียว (= ทุก migration ต่อกัน มีเทสต์ตรวจว่าตรงกัน)
+- Existing project: run only the files you have not run yet, in the SQL Editor.
+- New project: run `supabase/schema.sql` alone (it is every migration joined together; a test checks they match).
 
-| ไฟล์ | เพิ่มอะไร |
+| File | Adds |
 |---|---|
-| `20261116000001_init.sql` | ตารางหลัก + Row Level Security |
-| `20261116000002_accounts_cash_risk.sql` | บัญชีเงิน, stop/target, ฟังก์ชันลบบัญชีตัวเอง |
+| `20261116000001_init.sql` | Core tables + Row Level Security |
+| `20261116000002_accounts_cash_risk.sql` | Cash ledger, stop/target, self-service account deletion |
 
-## อีเมล (ลืมรหัสผ่าน / ยืนยันอีเมล)
+## Email (password reset / confirmation)
 
-ระบบส่งอีเมลในตัวของ Supabase จำกัดมาก ถ้าเปิดให้คนอื่นใช้ ควรตั้ง SMTP ของตัวเองที่ Supabase → **Authentication → Emails → SMTP Settings** (เช่น Resend) แล้วค่อยเปิด *Confirm email*
+Supabase's built-in email sender is heavily rate-limited. If other people will use the site, set up your own SMTP in Supabase → **Authentication → Emails → SMTP Settings** (for example Resend), then turn on *Confirm email*.
 
-## การคำนวณ
+## How the numbers are calculated
 
-- **FIFO แยกตามหุ้น:** ขายแล้วจับคู่กับล็อตที่ซื้อก่อนสุด รองรับหุ้นเศษส่วน (คำนวณทศนิยมด้วย decimal.js) เศษหุ้นที่ต่ำกว่า 0.000001 จากการปัดของโบรกไม่นับ
-- **ค่าธรรมเนียม:** ฝั่งซื้อรวมในทุน ฝั่งขายหักจากรายรับ
-- **กำไรเป็นบาท** = รายรับ × อัตรา ฿/$ วันขาย − ทุน × อัตรา ฿/$ วันซื้อ จึงรวมผลจากค่าเงินด้วย
-- **อัตรา ฿/$:** ใช้อัตราจริงจากไฟล์โบรกถ้ามี (เช่น Dime) ไม่อย่างนั้นดึงอัตรารายวันจาก [Frankfurter](https://frankfurter.dev) (ข้อมูล ECB)
-- **ไฟล์ที่มีแต่วันที่ (ไม่มีเวลา):** วางรายการไว้ 10:00 น. เวลานิวยอร์กของวันนั้น และเรียงไม้ในวันเดียวกันด้วยเลขที่คำสั่งของ Dime
-- **Win rate:** นับการขาย 1 ครั้งเป็น 1 เทรด
-- **R-multiple:** กำไร/ขาดทุนของไม้ ÷ (ราคาซื้อ − stop) × จำนวน ใช้ stop ที่ตั้งตอนซื้อ
-- **หุ้นที่ยังถือ:** มูลค่าตามราคาล่าสุด (Yahoo Finance ผ่าน server, แคช 5 นาที) เทียบกับทุน; เป็นบาทใช้อัตราวันนี้เทียบทุนบาทตอนซื้อ
-- **เงินสดคงเหลือ (ประมาณ):** ฝากสุทธิ + ปันผล/ดอกเบี้ยสุทธิ − เงินซื้อ + เงินขาย — แม่นเมื่อบันทึกเงินฝากครบ
+- **FIFO per stock:** each sale is matched with the earliest lots bought. Fractional shares are supported (decimal math with decimal.js); dust under 0.000001 shares from broker rounding is ignored.
+- **Fees:** buy fees are added to cost; sell fees are taken from proceeds.
+- **P/L in baht** = proceeds × ฿/$ rate on the sell date − cost × ฿/$ rate on the buy date, so currency moves are included.
+- **฿/$ rate:** the real rate from the broker file when it has one (e.g. Dime); otherwise the daily rate from [Frankfurter](https://frankfurter.dev) (ECB data).
+- **Date-only files:** trades are placed at 10:00 New York time on that day, and same-day trades are ordered by Dime's order number.
+- **Win rate:** each sale counts as one trade.
+- **R-multiple:** the trade's P/L ÷ ((buy price − stop) × quantity), using the stop set at purchase.
+- **Open positions:** valued at the latest price (Yahoo Finance via the server, cached 5 minutes) against cost; in baht, today's rate against the baht cost at purchase.
+- **Estimated cash left:** net deposits + net dividends/interest − money spent on buys + money from sells. It is accurate once all deposits are recorded.
 
-## ความเป็นส่วนตัว
+## Privacy
 
-- ข้อมูลทุกตารางเปิด Row Level Security — แต่ละบัญชีเห็นเฉพาะข้อมูลของตัวเอง
-- โลโก้หุ้น ราคาล่าสุด และอัตราแลกเปลี่ยนถูกดึงจากฝั่ง server (`/api/logo`, `/api/prices`, `/api/fx`) แล้วแคชไว้ เบราว์เซอร์ไม่ได้ส่งรายชื่อหุ้นที่ถือไปให้เว็บภายนอกโดยตรง
-- อย่า commit ไฟล์ statement จริง — วางไว้ใน `samples/` ซึ่งอยู่ใน `.gitignore`
+- Every table uses Row Level Security, so each account sees only its own data.
+- Stock logos, latest prices and exchange rates are fetched by the server (`/api/logo`, `/api/prices`, `/api/fx`) and cached. The browser never sends your holdings to outside sites directly.
+- The first-visit language is chosen from the visitor's country header that Netlify adds to each request; the choice is then stored in a `stocksme-lang` cookie. No location is saved.
+- Never commit real statements — put them in `samples/`, which is in `.gitignore`.
 
-## โครงสร้างโปรเจกต์
+## Project layout
 
 ```
 src/
-  app/(app)/        หน้าในแอป: ภาพรวม, รายการ, บันทึก, รายงาน, นำเข้า, ตั้งค่า
-  app/api/          fx (อัตราแลกเปลี่ยน), logo (โลโก้หุ้น)
-  components/       AppShell (top bar + dock), Charts, PnlCalendar, Ticker, Brand, ui
-  lib/pnl.ts        เครื่องคำนวณ FIFO + ออปชันหมดอายุ
-  lib/importers/    ตัวอ่านไฟล์โบรก
-  lib/stats.ts      สถิติ, กราฟ, การจัดกลุ่ม
-supabase/migrations/ การเปลี่ยน schema ทีละขั้น
-supabase/schema.sql ทุก migration รวมกัน (สำหรับโปรเจกต์ใหม่)
+  app/(app)/        In-app pages: overview, trades, cash, journal, reports, import, settings
+  app/api/          fx (exchange rates), logo (stock logos), prices (latest prices)
+  components/       AppShell (top bar + dock), LanguagePicker, Charts, PnlCalendar, Ticker, Brand, ui
+  i18n/             Languages: config, server/client helpers, messages/en.ts and messages/th.ts
+  lib/pnl.ts        FIFO engine + expired options
+  lib/importers/    Broker file readers
+  lib/stats.ts      Statistics, charts, grouping
+supabase/migrations/ Step-by-step schema changes
+supabase/schema.sql  All migrations combined (for new projects)
 ```
 
-## คำสั่ง
+### Adding or changing text
 
-| คำสั่ง | ทำอะไร |
+All interface text lives in `src/i18n/messages/`. `th.ts` defines the structure and `en.ts` must have every key with the same `{placeholders}`; `npm test` checks this. Server components use `getI18n()` and client components use `useI18n()`.
+
+## Commands
+
+| Command | What it does |
 |---|---|
-| `npm run dev` | รันบนเครื่องตัวเอง |
-| `npm test` | ทดสอบการคำนวณ P/L, ตัวอ่านไฟล์, ออปชัน, โลโก้ |
-| `npm run typecheck` | ตรวจ TypeScript |
-| `npm run lint` | ตรวจโค้ดด้วย ESLint |
-| `npm run build` | build สำหรับ production |
+| `npm run dev` | Run locally |
+| `npm test` | Test P/L maths, file importers, options, logos and translations |
+| `npm run typecheck` | Check TypeScript |
+| `npm run lint` | Lint with ESLint |
+| `npm run build` | Production build |
 
-ทุก push และ pull request จะรันทั้งหมดนี้บน GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) โดยทดสอบทั้งเวลา UTC และเวลาไทย
+Every push and pull request runs all of these on GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), with tests in both UTC and Thailand time.
+
+---
+
+## ภาษาไทย
+
+Stocksme คือสมุดบันทึกการเทรดหุ้น US ส่วนตัว นำเข้าไฟล์จาก Dime หรือ Webull แล้วดูกำไรขาดทุนสุทธิหลังหักค่าธรรมเนียม ทั้งดอลลาร์และบาท พร้อมสมุดบันทึก รายงาน และบัญชีเงิน
+
+- เว็บมีภาษาอังกฤษ (หลัก) และภาษาไทย เปลี่ยนได้ที่ปุ่มธงบน top bar หรือหน้าตั้งค่า — เข้าเว็บครั้งแรกจากในไทยจะเป็นภาษาไทยให้อัตโนมัติ
+- วิธีติดตั้งและ deploy อยู่ในหัวข้อ [Run locally](#run-locally) และ [Deploy on Netlify](#deploy-on-netlify) ด้านบน
+- ตัวเลขทั้งหมดใช้ทบทวนการเทรดของตัวเอง ไม่ใช่คำแนะนำการลงทุน

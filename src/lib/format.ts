@@ -1,5 +1,4 @@
-import { usMarketDay } from "./fx";
-import { isDateOnlyTime } from "./importers";
+// ตัวจัดรูปแบบตัวเลข/เงินที่ไม่ขึ้นกับภาษา — วันที่และระยะเวลาอยู่ใน src/i18n/core.ts (formatters)
 import type { Currency } from "./types";
 
 export function money(v: number, c: Currency, opts: { sign?: boolean; compact?: boolean; digits?: number } = {}) {
@@ -24,27 +23,6 @@ export function price(v: number | string) {
 
 export function pct(v: number) {
   return (v * 100).toFixed(1) + "%";
-}
-
-export function dateTime(iso: string) {
-  return new Date(iso).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
-}
-
-/** เวลาของรายการซื้อขาย: ถ้ามาจากไฟล์ที่มีแต่วันที่ จะแสดงแค่วันที่ (วันซื้อขายของตลาด US) ไม่แสดงเวลาที่เราสมมติขึ้น */
-export function tradeTime(iso: string) {
-  if (!isDateOnlyTime(iso)) return dateTime(iso);
-  return new Date(usMarketDay(iso) + "T00:00:00").toLocaleDateString("th-TH", { dateStyle: "medium" });
-}
-
-export function dateOnly(iso: string) {
-  return new Date(iso).toLocaleDateString("th-TH", { dateStyle: "medium" });
-}
-
-export function holding(minutes: number) {
-  if (minutes <= 0) return "วันเดียวกัน"; // ไฟล์ที่มีแต่วันที่: ซื้อและขายวันเดียวกัน
-  if (minutes < 60) return `${minutes} นาที`;
-  if (minutes < 60 * 24) return `${(minutes / 60).toFixed(1)} ชม.`;
-  return `${Math.round(minutes / 1440)} วัน`;
 }
 
 export const tone = (v: number) => (v > 0 ? "text-gain" : v < 0 ? "text-loss" : "text-muted");

@@ -238,6 +238,7 @@
   --color-loss: var(--loss);
   --color-gain-soft: var(--gain-soft);
   --color-loss-soft: var(--loss-soft);
+  /* ไทย/ละติน: IBM Plex Sans Thai; จีน/ฮินดี: ฟอนต์ของระบบ (Windows / macOS / Android) */
   --font-sans: var(--font-thai), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 }
 

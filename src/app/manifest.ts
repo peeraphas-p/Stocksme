@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Stocksme — บันทึกการเทรด",
+    name: "Stocksme — Trading Journal",
     short_name: "Stocksme",
-    description: "บันทึกการเทรดหุ้น US กำไรขาดทุนทั้ง USD และบาท",
+    description: "US stock trading journal · P/L in USD and THB",
     start_url: "/",
     display: "standalone",
     background_color: "#1f2427",

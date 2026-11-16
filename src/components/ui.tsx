@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Inbox, TriangleAlert, X, type LucideIcon } from "lucide-react";
 import type { Currency } from "@/lib/types";
+import { useI18n } from "@/i18n/client";
 
 export function PageHeader({ title, eyebrow, children }: { title: string; eyebrow?: string; children?: React.ReactNode }) {
   return (
@@ -39,9 +40,10 @@ export function Segmented<T extends string>({
 }
 
 export function CurrencyToggle({ value, onChange }: { value: Currency; onChange: (c: Currency) => void }) {
+  const { m } = useI18n();
   return (
     <Segmented
-      label="สกุลเงิน"
+      label={m.common.currency}
       value={value}
       onChange={onChange}
       options={[
@@ -53,6 +55,7 @@ export function CurrencyToggle({ value, onChange }: { value: Currency; onChange:
 }
 
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+  const { m } = useI18n();
   useEffect(() => {
     if (!open) return;
     const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -72,7 +75,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-medium tracking-tight">{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="ปิด">
+          <button className="icon-btn" onClick={onClose} aria-label={m.common.close}>
             <X size={18} />
           </button>
         </div>
@@ -118,11 +121,12 @@ export function Empty({ children, icon: Icon = Inbox, title }: { children?: Reac
 }
 
 export function ErrorBox({ error }: { error: string | null }) {
+  const { m, t } = useI18n();
   if (!error) return null;
   return (
     <div className="card flex items-start gap-2.5 text-sm text-loss">
       <TriangleAlert size={17} className="mt-0.5 shrink-0" aria-hidden="true" />
-      <span>เกิดข้อผิดพลาด: {error}</span>
+      <span>{t(m.common.error, { e: error })}</span>
     </div>
   );
 }
@@ -146,8 +150,9 @@ export function SkeletonBar({ className = "" }: { className?: string }) {
 
 /** การ์ดโครงร่างระหว่างโหลด (แทนข้อความ "กำลังโหลด…") */
 export function Skeleton({ cards = 1, rows = 4, className = "" }: { cards?: number; rows?: number; className?: string }) {
+  const { m } = useI18n();
   return (
-    <div role="status" aria-label="กำลังโหลด" className={`grid gap-3 sm:gap-4 ${cards > 1 ? "sm:grid-cols-2 lg:grid-cols-4" : ""} ${className}`}>
+    <div role="status" aria-label={m.common.loading} className={`grid gap-3 sm:gap-4 ${cards > 1 ? "sm:grid-cols-2 lg:grid-cols-4" : ""} ${className}`}>
       {Array.from({ length: cards }, (_, i) => (
         <div key={i} className="card space-y-3">
           <SkeletonBar className="h-3 w-1/3" />
@@ -162,8 +167,9 @@ export function Skeleton({ cards = 1, rows = 4, className = "" }: { cards?: numb
 
 /** โครงร่างของหน้าภาพรวม */
 export function DashboardSkeleton() {
+  const { m } = useI18n();
   return (
-    <div role="status" aria-label="กำลังโหลด" className="space-y-3 sm:space-y-4">
+    <div role="status" aria-label={m.common.loading} className="space-y-3 sm:space-y-4">
       <div className="grid gap-3 sm:gap-4 lg:grid-cols-[0.82fr_1.5fr]">
         <div className="card space-y-4">
           <SkeletonBar className="h-3 w-1/2" />

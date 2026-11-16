@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { PeakChart } from "@/components/ui/peak-chart";
 import { money } from "@/lib/format";
 import type { Currency } from "@/lib/types";
+import { useI18n } from "@/i18n/client";
 
 const FONT = 'var(--font-thai), system-ui, -apple-system, "Segoe UI", sans-serif';
 // สีเรืองแสงจากชุดสีของเว็บ (เขียวโลโก้ / ส้มอิฐ) และลดความสดลง ไม่ให้การ์ดเด่นจนขัดตา
@@ -46,13 +47,14 @@ export function PnlPeakCard<P extends string>({
   onPeriod: (p: P) => void;
 }) {
   const [ref, width] = useBoxWidth(420);
+  const { m, t, fmt } = useI18n();
   const sym = currency === "USD" ? "$" : "฿";
   const data = [0, ...curve.map((p) => p.cum)];
-  const labels = ["เริ่มต้นช่วง", ...curve.map((p) => new Date(p.day + "T00:00:00").toLocaleDateString("th-TH", { day: "numeric", month: "short" }))];
+  const labels = [m.peak.periodStart, ...curve.map((p) => fmt.dayMonth(p.day))];
   // มุมซ้ายบน: ช่วงวันที่ที่มีไม้ปิด (ไม่ซ้ำกับปุ่มเลือกช่วงเวลา)
-  const range = curve.length === 0 ? "ไม่มีไม้ที่ปิดในช่วงนี้" : curve.length === 1 ? labels[1] : `${labels[1]} – ${labels[labels.length - 1]}`;
+  const range = curve.length === 0 ? m.overview.noClosed : curve.length === 1 ? labels[1] : `${labels[1]} – ${labels[labels.length - 1]}`;
   return (
-    <div ref={ref} className="flex w-full justify-center" aria-label={`กำไร/ขาดทุนสุทธิ ${periodLabel} ${money(net, currency, { sign: true })}`}>
+    <div ref={ref} className="flex w-full justify-center" aria-label={`${m.peak.net} ${periodLabel} ${money(net, currency, { sign: true })}`}>
       {width > 0 && (
         <PeakChart
           width={width}
@@ -66,8 +68,8 @@ export function PnlPeakCard<P extends string>({
           valueSuffix=""
           decimals={currency === "USD" ? 2 : 0}
           trend={net > 0 ? "up" : net < 0 ? "down" : "none"}
-          title="กำไร/ขาดทุนสุทธิ"
-          caption={`หักค่าธรรมเนียมแล้ว · ${trades} เทรด`}
+          title={m.peak.net}
+          caption={t(m.peak.feesCaption, { n: trades })}
           updatedText={range}
           periods={periods.map((p) => p.label)}
           period={periodLabel}
@@ -83,46 +85,49 @@ export function PnlPeakCard<P extends string>({
 }
 
 // ข้อมูลตัวอย่างสำหรับหน้าแรกเท่านั้น (ไม่ใช่ข้อมูลของใคร)
-const SAMPLES: Record<string, { data: number[]; labels: string[]; value: number }> = {
-  สัปดาห์นี้: { data: [0, 22, -8, 31, 64, 52, 88], labels: ["เริ่ม", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."], value: 88 },
-  เดือนนี้: {
-    data: [0, 12, 30, 18, 46, 61, 40, 72, 95, 88, 120, 104, 141, 168, 150, 186, 210, 197, 236, 262, 248],
-    labels: ["เริ่ม", ...Array.from({ length: 20 }, (_, i) => `วันที่ ${i + 1}`)],
-    value: 248,
-  },
-  ปีนี้: {
-    data: [0, 120, 80, 260, 410, 350, 520, 610, 560, 790, 940, 880, 1124],
-    labels: ["เริ่ม", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
-    value: 1124,
-  },
-};
+const SAMPLES = {
+  thisWeek: { data: [0, 22, -8, 31, 64, 52, 88], value: 88 },
+  thisMonth: { data: [0, 12, 30, 18, 46, 61, 40, 72, 95, 88, 120, 104, 141, 168, 150, 186, 210, 197, 236, 262, 248], value: 248 },
+  thisYear: { data: [0, 120, 80, 260, 410, 350, 520, 610, 560, 790, 940, 880, 1124], value: 1124 },
+} as const;
+type SampleKey = keyof typeof SAMPLES;
+const SAMPLE_KEYS = Object.keys(SAMPLES) as SampleKey[];
 
 /** ภาพหลักหน้าแรก (ข้อมูลตัวอย่าง) — เลือกช่วงเวลาแล้วเส้นจะเปลี่ยนรูปให้ดู */
 export function PeakHero() {
   const [ref, width] = useBoxWidth(400);
-  const [period, setPeriod] = useState("เดือนนี้");
+  const { m, t, fmt } = useI18n();
+  const [period, setPeriod] = useState<SampleKey>("thisMonth");
   const s = SAMPLES[period];
+  const labels = [
+    m.peak.sampleStart,
+    ...(period === "thisWeek"
+      ? [1, 2, 3, 4, 5, 6].map((d) => fmt.weekdayShort(d))
+      : period === "thisMonth"
+        ? Array.from({ length: 20 }, (_, i) => t(m.peak.dayN, { n: i + 1 }))
+        : Array.from({ length: 12 }, (_, i) => fmt.monthShort(i))),
+  ];
   return (
-    <div ref={ref} className="flex w-full justify-center" aria-label="ภาพตัวอย่างการ์ดกำไรสุทธิ (ข้อมูลตัวอย่าง)">
+    <div ref={ref} className="flex w-full justify-center" aria-label={m.peak.sampleAria}>
       {width > 0 && (
         <PeakChart
           width={width}
           font={FONT}
           accent={GAIN_GLOW}
           muted={MUTED}
-          data={s.data}
-          labels={s.labels}
+          data={[...s.data]}
+          labels={labels}
           value={s.value}
           valuePrefix="+$"
           valueSuffix=""
           decimals={2}
           trend="up"
-          title="กำไร/ขาดทุนสุทธิ"
-          caption="ข้อมูลตัวอย่าง · หักค่าธรรมเนียมแล้ว"
-          updatedText="ตัวอย่าง"
-          periods={Object.keys(SAMPLES)}
-          period={period}
-          onPeriodChange={setPeriod}
+          title={m.peak.net}
+          caption={m.peak.sampleCaption}
+          updatedText={m.peak.sampleTag}
+          periods={SAMPLE_KEYS.map((k) => m.periods[k])}
+          period={m.periods[period]}
+          onPeriodChange={(label) => setPeriod(SAMPLE_KEYS.find((k) => m.periods[k] === label) ?? "thisMonth")}
           formatValue={(v) => money(v, "USD", { sign: true })}
         />
       )}

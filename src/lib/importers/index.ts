@@ -4,29 +4,12 @@ export type BrokerId = "webull" | "dime" | "liberator" | "generic";
 export type DateOrder = "auto" | "MDY" | "DMY" | "YMD";
 export type Zone = "America/New_York" | "Asia/Bangkok" | "UTC";
 
-export const BROKERS: { id: BrokerId; label: string; zone: Zone; order: DateOrder; help: string }[] = [
-  {
-    id: "webull",
-    label: "Webull",
-    zone: "America/New_York",
-    order: "MDY",
-    help: "แอป/เว็บ Webull → Orders (คำสั่งซื้อขาย) → History → Export เป็น CSV",
-  },
-  {
-    id: "dime",
-    label: "Dime!",
-    zone: "Asia/Bangkok",
-    order: "auto",
-    help: "ไฟล์ Excel ของ Dime ที่มีชีต “รายการซื้อ” และ “รายการขาย” (คอลัมน์ วันที่ซื้อ/วันที่ขาย, หุ้น, จำนวนหุ้น, ราคาต่อหุ้น, ค่าธรรมเนียมรวม VAT, อัตราแลกเปลี่ยน, เลขที่คำสั่ง) — นำเข้าทั้งสองชีตพร้อมกัน ใช้ค่าธรรมเนียมและอัตรา ฿/$ จริงจากไฟล์",
-  },
-  {
-    id: "liberator",
-    label: "Liberator",
-    zone: "Asia/Bangkok",
-    order: "auto",
-    help: "ใช้ statement/ประวัติรายการที่ส่งออกได้ แล้วตรวจการจับคู่คอลัมน์ด้านล่าง (ส่งไฟล์ตัวอย่างมาเพื่อทำตัวอ่านเฉพาะได้)",
-  },
-  { id: "generic", label: "อื่นๆ / CSV ทั่วไป", zone: "America/New_York", order: "auto", help: "ไฟล์ต้องมีคอลัมน์ หุ้น, ซื้อ/ขาย, จำนวน, ราคา, วันเวลา" },
+/** โบรกเกอร์ที่รองรับ — คำอธิบายวิธี export อยู่ใน messages: import.helpWebull ฯลฯ; label เก็บลงฐานข้อมูลเป็นชื่อโบรก */
+export const BROKERS: { id: BrokerId; label: string; zone: Zone; order: DateOrder }[] = [
+  { id: "webull", label: "Webull", zone: "America/New_York", order: "MDY" },
+  { id: "dime", label: "Dime!", zone: "Asia/Bangkok", order: "auto" },
+  { id: "liberator", label: "Liberator", zone: "Asia/Bangkok", order: "auto" },
+  { id: "generic", label: "Other", zone: "America/New_York", order: "auto" },
 ];
 
 export type Field = "symbol" | "side" | "qty" | "price" | "gross" | "fee" | "fx" | "date" | "time" | "orderId" | "status";
@@ -36,19 +19,8 @@ export type Mapping = Partial<Record<Field, string>>;
 export const SIDE_ALL_BUY = "__ALL_BUY__";
 export const SIDE_ALL_SELL = "__ALL_SELL__";
 
-export const FIELD_LABELS: Record<Field, string> = {
-  symbol: "หุ้น (Symbol)",
-  side: "ซื้อ/ขาย",
-  qty: "จำนวนหุ้น",
-  price: "ราคาต่อหุ้น (USD)",
-  gross: "มูลค่าก่อนค่าธรรมเนียม (USD)",
-  fee: "ค่าธรรมเนียม (USD)",
-  fx: "อัตรา ฿/$",
-  date: "วันที่ / วันเวลา",
-  time: "เวลา (ถ้าแยกคอลัมน์)",
-  orderId: "เลขที่คำสั่ง",
-  status: "สถานะคำสั่ง",
-};
+/** ลำดับช่องในหน้าจับคู่คอลัมน์ — ชื่อที่แสดงอยู่ใน messages: import.fieldSymbol ฯลฯ */
+export const FIELDS: Field[] = ["symbol", "side", "qty", "price", "gross", "fee", "fx", "date", "time", "orderId", "status"];
 export const REQUIRED: Field[] = ["symbol", "side", "qty", "price", "date"];
 
 // ชื่อหัวคอลัมน์ (ตัวพิมพ์เล็ก) ที่รู้จัก — เรียงจากเฉพาะเจาะจงไปทั่วไป
@@ -229,13 +201,18 @@ export function parseDateTime(raw: unknown, order: DateOrder, zone: Zone): strin
   return zonedToIso(y, mo, d, h, mi, sec, z);
 }
 
+export type SkipCode = "status" | "empty" | "total" | "zero";
+export type IssueCode = "noSymbol" | "side" | "qty" | "price" | "date";
+
 export interface ParsedRow {
   line: number;
   /** ชื่อชีตที่แถวนี้มาจาก (ไฟล์ Excel) */
   sheet?: string;
   trade?: NewTrade;
-  skip?: string; // ข้ามโดยตั้งใจ (เช่น คำสั่งที่ยกเลิก)
-  error?: string;
+  /** ข้ามโดยตั้งใจ (เช่น คำสั่งที่ยกเลิก) — รหัสที่หน้าเว็บแปลงเป็นข้อความ import.skip* */
+  skip?: { code: SkipCode; value?: string };
+  /** อ่านแถวนี้ไม่ได้ — รหัสที่หน้าเว็บแปลงเป็นข้อความ import.err* */
+  issues?: { code: IssueCode; value?: string }[];
 }
 
 const SKIP_STATUS = /cancel|reject|fail|expired|pending|working|ยกเลิก|ไม่สำเร็จ/i;
@@ -270,7 +247,7 @@ function toTrade(
 ): ParsedRow {
   const get = (f: Field) => (map[f] ? r[map[f]!] : undefined);
   const status = get("status");
-  if (status != null && String(status).trim() && SKIP_STATUS.test(String(status))) return { line, skip: `สถานะ ${status}` };
+  if (status != null && String(status).trim() && SKIP_STATUS.test(String(status))) return { line, skip: { code: "status", value: String(status) } };
 
   const symbol = String(get("symbol") ?? "").trim().toUpperCase();
   const side: Side | null = map.side === SIDE_ALL_BUY ? "BUY" : map.side === SIDE_ALL_SELL ? "SELL" : parseSide(get("side"));
@@ -283,21 +260,21 @@ function toTrade(
   const timeVal = get("time");
   const when = parseDateTime(timeVal != null && timeVal !== "" && !(dateVal instanceof Date) ? `${dateVal} ${timeVal}` : dateVal, order, zone);
 
-  if (!symbol && qtyRaw == null) return { line, skip: "แถวว่าง" };
-  if (/^(รวม|total|grand total)$/i.test(symbol)) return { line, skip: "แถวสรุปยอด" };
-  if (qtyRaw === 0) return { line, skip: "ไม่มีการจับคู่ (จำนวน 0)" };
+  if (!symbol && qtyRaw == null) return { line, skip: { code: "empty" } };
+  if (/^(รวม|total|grand total)$/i.test(symbol)) return { line, skip: { code: "total" } };
+  if (qtyRaw === 0) return { line, skip: { code: "zero" } };
 
   // ราคาต่อหุ้นในไฟล์มักปัดเป็น 2 ตำแหน่ง — ถ้ามีมูลค่ารวม ให้คิดราคาจริงจาก มูลค่า ÷ จำนวน (แม่นกว่าสำหรับหุ้นเศษส่วน)
   let price = parseNumber(get("price"));
   if (gross != null && gross !== 0 && qtyRaw) price = round6(Math.abs(gross) / Math.abs(qtyRaw));
 
-  const errs: string[] = [];
-  if (!symbol) errs.push("ไม่มีชื่อหุ้น");
-  if (!side) errs.push(`อ่านซื้อ/ขายไม่ออก (“${get("side") ?? ""}”)`);
-  if (qtyRaw == null) errs.push("จำนวนไม่ถูกต้อง");
-  if (price == null || price < 0) errs.push("ราคาไม่ถูกต้อง");
-  if (!when) errs.push(`อ่านวันที่ไม่ออก (“${dateVal ?? ""}”)`);
-  if (errs.length) return { line, error: errs.join(", ") };
+  const issues: NonNullable<ParsedRow["issues"]> = [];
+  if (!symbol) issues.push({ code: "noSymbol" });
+  if (!side) issues.push({ code: "side", value: String(get("side") ?? "") });
+  if (qtyRaw == null) issues.push({ code: "qty" });
+  if (price == null || price < 0) issues.push({ code: "price" });
+  if (!when) issues.push({ code: "date", value: dateVal instanceof Date ? dateVal.toISOString() : String(dateVal ?? "") });
+  if (issues.length) return { line, issues };
 
   const qty = Math.abs(qtyRaw!);
   const base = orderId ? `${broker}|order:${orderId}|${side}` : [broker, symbol, side, qty, price, when].join("|");
@@ -366,7 +343,7 @@ export async function parseWorkbook(data: ArrayBuffer): Promise<Table[]> {
 
 export async function parseCsv(text: string): Promise<Table[]> {
   const Papa = (await import("papaparse")).default;
-  const res = Papa.parse<Record<string, string>>(text.replace(/^﻿/, ""), { header: true, skipEmptyLines: "greedy" });
+  const res = Papa.parse<Record<string, string>>(text.replace(/^\uFEFF/, ""), { header: true, skipEmptyLines: "greedy" });
   const headers = res.meta.fields ?? [];
   return headers.length ? [{ sheet: "", headers, rows: res.data }] : [];
 }

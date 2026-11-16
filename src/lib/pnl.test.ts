@@ -235,9 +235,9 @@ describe("rSummary", () => {
     ]);
     const s = rSummary(r.closed);
     expect(s).toEqual({ planned: 2, total: 3, avgR: -0.5, overLoss: 1, bigWins: 1 });
-    expect(rBucket(-3)).toMatch(/^1\./);
-    expect(rBucket(2)).toMatch(/^5\./);
-    expect(rBucket(null)).toMatch(/^6\./);
+    expect(rBucket(-3)).toBe("1");
+    expect(rBucket(2)).toBe("5");
+    expect(rBucket(null)).toBe("6");
   });
 });
 

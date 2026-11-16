@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { insertTrade, updateTrade } from "@/lib/data";
 import { fetchFxRates, usMarketDay } from "@/lib/fx";
 import { EMOTIONS, type NewTrade, type Side, type Trade } from "@/lib/types";
+import { useI18n } from "@/i18n/client";
 
 function toLocalInput(iso: string) {
   const d = new Date(iso);
@@ -26,6 +27,7 @@ export default function TradeForm({
   strategyTags: string[];
   onDone: () => void;
 }) {
+  const { m, t } = useI18n();
   const init: Partial<NewTrade> | undefined = trade ?? preset;
   const [side, setSide] = useState<Side>(init?.side ?? "BUY");
   const [symbol, setSymbol] = useState(init?.symbol ?? "");
@@ -107,48 +109,49 @@ export default function TradeForm({
             onClick={() => setSide(s)}
             className={`btn ${side === s ? (s === "BUY" ? "bg-gain text-white border-transparent" : "bg-loss text-white border-transparent") : ""}`}
           >
-            {s === "BUY" ? "ซื้อ" : "ขาย"}
+            {s === "BUY" ? m.common.buy : m.common.sell}
           </button>
         ))}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <label className="field col-span-2">
-          <span>หุ้น (Symbol)</span>
+          <span>{m.form.symbol}</span>
           <input required value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder="NVDA" autoCapitalize="characters" />
         </label>
         <label className="field">
-          <span>จำนวนหุ้น</span>
+          <span>{m.form.qty}</span>
           <input required inputMode="decimal" type="number" step="any" min="0" value={qty} onChange={(e) => setQty(e.target.value)} />
         </label>
         <label className="field">
-          <span>ราคา (USD)</span>
+          <span>{m.form.price}</span>
           <input required inputMode="decimal" type="number" step="any" min="0" value={price} onChange={(e) => setPrice(e.target.value)} />
         </label>
         <label className="field">
-          <span>ค่าธรรมเนียม (USD)</span>
+          <span>{m.form.fee}</span>
           <input inputMode="decimal" type="number" step="any" min="0" value={fee} onChange={(e) => setFee(e.target.value)} />
         </label>
         {side === "BUY" && (
           <>
             <label className="field">
-              <span>จุดตัดขาดทุน (stop)</span>
-              <input inputMode="decimal" type="number" step="any" min="0" value={stop} onChange={(e) => setStop(e.target.value)} placeholder="ไม่บังคับ" />
+              <span>{m.form.stop}</span>
+              <input inputMode="decimal" type="number" step="any" min="0" value={stop} onChange={(e) => setStop(e.target.value)} placeholder={m.common.optional} />
             </label>
             <label className="field">
-              <span>เป้าหมายราคา</span>
-              <input inputMode="decimal" type="number" step="any" min="0" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="ไม่บังคับ" />
+              <span>{m.form.target}</span>
+              <input inputMode="decimal" type="number" step="any" min="0" value={target} onChange={(e) => setTarget(e.target.value)} placeholder={m.common.optional} />
             </label>
             {(riskTotal != null || (riskPer != null && riskPer <= 0)) && (
               <p className={`col-span-2 -mt-1 text-xs ${riskPer != null && riskPer <= 0 ? "text-loss" : "text-muted"}`}>
                 {riskPer != null && riskPer <= 0
-                  ? "จุดตัดขาดทุนต้องต่ำกว่าราคาซื้อ"
-                  : `เสี่ยง $${riskTotal!.toLocaleString("en-US", { maximumFractionDigits: 2 })} ถ้าโดน stop${rr != null ? ` · ได้ ${rr.toFixed(2)} เท่าของความเสี่ยงถ้าถึงเป้า (1:${rr.toFixed(1)})` : ""}`}
+                  ? m.form.stopAbove
+                  : t(m.form.risk, { v: "$" + riskTotal!.toLocaleString("en-US", { maximumFractionDigits: 2 }) }) +
+                    (rr != null ? t(m.form.reward, { rr: rr.toFixed(2), r1: rr.toFixed(1) }) : "")}
               </p>
             )}
           </>
         )}
         <label className="field">
-          <span>อัตรา ฿/$</span>
+          <span>{m.form.fx}</span>
           <input
             inputMode="decimal"
             type="number"
@@ -159,53 +162,55 @@ export default function TradeForm({
               setFx(e.target.value);
               setFxTouched(true);
             }}
-            placeholder="อัตโนมัติ"
+            placeholder={m.common.auto}
           />
         </label>
         <label className="field col-span-2">
-          <span>วันเวลา</span>
+          <span>{m.common.datetime}</span>
           <input required type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} />
         </label>
         <label className="field">
-          <span>กลยุทธ์</span>
+          <span>{m.common.strategy}</span>
           <select value={tag} onChange={(e) => setTag(e.target.value)}>
             <option value="">—</option>
-            {[...new Set([...strategyTags, ...(tag ? [tag] : [])])].map((t) => (
-              <option key={t}>{t}</option>
+            {[...new Set([...strategyTags, ...(tag ? [tag] : [])])].map((s) => (
+              <option key={s}>{s}</option>
             ))}
           </select>
         </label>
         <label className="field">
-          <span>อารมณ์ตอนเทรด</span>
+          <span>{m.form.emotion}</span>
           <select value={emotion} onChange={(e) => setEmotion(e.target.value)}>
             <option value="">—</option>
-            {EMOTIONS.map((t) => (
-              <option key={t}>{t}</option>
+            {EMOTIONS.map((e) => (
+              <option key={e} value={e}>
+                {m.emotions[e]}
+              </option>
             ))}
           </select>
         </label>
         <label className="field">
-          <span>โบรกเกอร์</span>
+          <span>{m.common.broker}</span>
           <select value={broker} onChange={(e) => setBroker(e.target.value)}>
             <option value="">—</option>
             <option>Webull</option>
             <option>Dime!</option>
             <option>Liberator</option>
-            <option>อื่นๆ</option>
+            <option value="อื่นๆ">{m.common.other}</option>
           </select>
         </label>
         <div className="field">
-          <span>มูลค่า</span>
+          <span>{m.form.value}</span>
           <div className="py-2 font-medium">{Number.isFinite(total) ? "$" + total.toLocaleString("en-US", { maximumFractionDigits: 2 }) : "—"}</div>
         </div>
         <label className="field col-span-2">
-          <span>โน้ต / เหตุผล</span>
+          <span>{m.form.note}</span>
           <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
         </label>
       </div>
       {err && <p className="text-sm text-loss">{err}</p>}
       <button className="btn btn-primary w-full" disabled={busy}>
-        {busy ? "กำลังบันทึก…" : trade ? "บันทึกการแก้ไข" : "เพิ่มรายการ"}
+        {busy ? m.common.saving : trade ? m.common.saveEdit : m.common.addItem}
       </button>
     </form>
   );

@@ -52,6 +52,7 @@ export interface Profile {
   strategy_tags: string[];
 }
 
+/** ค่าที่เก็บในฐานข้อมูล (ภาษาไทย) — หน้าเว็บแปลงเป็นภาษาที่เลือกด้วย messages.emotions */
 export const EMOTIONS = ["มั่นใจ", "ตามแผน", "FOMO", "กลัว", "โลภ", "แก้แค้นตลาด", "เบื่อ/เทรดเล่น"] as const;
 
 export type CashKind = "DEPOSIT" | "WITHDRAW" | "DIVIDEND" | "TAX" | "INTEREST" | "FEE";
@@ -68,11 +69,12 @@ export interface CashMovement {
   note: string | null;
 }
 
-export const CASH_KINDS: { kind: CashKind; label: string; sign: 1 | -1 }[] = [
-  { kind: "DEPOSIT", label: "ฝากเงิน", sign: 1 },
-  { kind: "WITHDRAW", label: "ถอนเงิน", sign: -1 },
-  { kind: "DIVIDEND", label: "ปันผล", sign: 1 },
-  { kind: "TAX", label: "ภาษีหัก ณ ที่จ่าย", sign: -1 },
-  { kind: "INTEREST", label: "ดอกเบี้ย", sign: 1 },
-  { kind: "FEE", label: "ค่าธรรมเนียมอื่น", sign: -1 },
+/** ทิศทางของเงินแต่ละประเภท (+ เข้าบัญชี, − ออก) — ชื่อที่แสดงอยู่ใน messages: cash.kindDEPOSIT ฯลฯ */
+export const CASH_KINDS: { kind: CashKind; sign: 1 | -1 }[] = [
+  { kind: "DEPOSIT", sign: 1 },
+  { kind: "WITHDRAW", sign: -1 },
+  { kind: "DIVIDEND", sign: 1 },
+  { kind: "TAX", sign: -1 },
+  { kind: "INTEREST", sign: 1 },
+  { kind: "FEE", sign: -1 },
 ];

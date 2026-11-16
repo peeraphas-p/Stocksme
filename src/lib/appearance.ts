@@ -22,10 +22,10 @@ export const DEFAULT_APPEARANCE: Appearance = {
   edge: 0.6,
 };
 
-export const GLASS_PRESETS: { name: string; value: Pick<Appearance, "blur" | "opacity" | "saturation" | "edge"> }[] = [
-  { name: "ใส", value: { blur: 8, opacity: 0.14, saturation: 1.1, edge: 0.8 } },
-  { name: "ฝ้า", value: { blur: 22, opacity: 0.3, saturation: 1.2, edge: 0.6 } },
-  { name: "ทึบ", value: { blur: 32, opacity: 0.82, saturation: 1, edge: 0.35 } },
+export const GLASS_PRESETS: { id: "clear" | "frosted" | "solid"; value: Pick<Appearance, "blur" | "opacity" | "saturation" | "edge"> }[] = [
+  { id: "clear", value: { blur: 8, opacity: 0.14, saturation: 1.1, edge: 0.8 } },
+  { id: "frosted", value: { blur: 22, opacity: 0.3, saturation: 1.2, edge: 0.6 } },
+  { id: "solid", value: { blur: 32, opacity: 0.82, saturation: 1, edge: 0.35 } },
 ];
 
 const KEY = "stocksme.appearance";

@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { money } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
 import type { Currency } from "@/lib/types";
 
 type Point = { day: string; pnl: number; cum: number };
@@ -26,15 +27,19 @@ const shortDay = (d: string) => {
 
 function Tip({ active, payload, currency, field }: { active?: boolean; payload?: { payload: Point }[]; currency: Currency; field: "pnl" | "cum" }) {
   if (!active || !payload?.length) return null;
-  const p = payload[0].payload;
+  return <TipBody p={payload[0].payload} currency={currency} field={field} />;
+}
+
+function TipBody({ p, currency, field }: { p: Point; currency: Currency; field: "pnl" | "cum" }) {
+  const { m, fmt } = useI18n();
   return (
     <div className="rounded-xl px-3 py-2 text-xs shadow-[0_12px_30px_-12px_var(--shadow)] ring-1 ring-[var(--border)]" style={{ background: "color-mix(in srgb, var(--panel) 94%, transparent)", backdropFilter: "blur(12px)" }}>
-      <div className="text-muted">{new Date(p.day + "T00:00:00").toLocaleDateString("th-TH", { dateStyle: "medium" })}</div>
+      <div className="text-muted">{fmt.day(p.day)}</div>
       <div className="mt-0.5 font-medium">
-        {field === "cum" ? "สะสม " : "วันนั้น "}
+        {field === "cum" ? m.charts.cumulative : m.charts.thatDay}{" "}
         {money(p[field], currency, { sign: true })}
       </div>
-      {field === "cum" && <div className="text-muted">วันนั้น {money(p.pnl, currency, { sign: true })}</div>}
+      {field === "cum" && <div className="text-muted">{m.charts.thatDay} {money(p.pnl, currency, { sign: true })}</div>}
     </div>
   );
 }

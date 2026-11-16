@@ -14,29 +14,33 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark, Wordmark } from "@/components/Brand";
+import LanguagePicker from "@/components/LanguagePicker";
 import { PeakHero } from "@/components/PeakCards";
+import { getI18n } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Stocksme — สมุดบันทึกการเทรดหุ้น US",
-  description: "นำเข้าไฟล์จาก Dime หรือ Webull แล้วดูกำไรขาดทุนสุทธิหลังหักค่าธรรมเนียม ทั้งดอลลาร์และบาท",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { m } = await getI18n();
+  return { title: `Stocksme — ${m.welcome.eyebrow}`, description: m.welcome.heroBody };
+}
 
-const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: FileSpreadsheet, title: "นำเข้าไฟล์จากโบรก", body: "Dime (ชีตซื้อ + ขายในไฟล์เดียว), Webull และ CSV/Excel ทั่วไป รายการซ้ำข้ามให้เอง" },
-  { icon: Coins, title: "กำไรสุทธิจริง", body: "จับคู่ซื้อ-ขายแบบ FIFO หักค่าธรรมเนียมทั้งสองขา รองรับหุ้นเศษส่วนและออปชัน" },
-  { icon: ChartNoAxesCombined, title: "ทั้งดอลลาร์และบาท", body: "ใช้อัตราแลกเปลี่ยนจริงของวันซื้อและวันขาย จึงเห็นผลจากค่าเงินด้วย" },
-  { icon: CalendarDays, title: "ปฏิทินกำไรรายวัน", body: "เห็นทันทีว่าวันไหนบวก วันไหนลบ พร้อม win rate และ profit factor" },
-  { icon: NotebookPen, title: "สมุดบันทึกและรายงาน", body: "จดเหตุผล อารมณ์ บทเรียน แล้วดูว่ากลยุทธ์ไหนทำเงิน อารมณ์ไหนพาเสีย" },
-  { icon: Smartphone, title: "ใช้บนมือถือได้", body: "ติดตั้งลงหน้าจอโฮมได้เหมือนแอป มีธีมสว่างและมืด" },
+const FEATURES: { icon: LucideIcon; n: 1 | 2 | 3 | 4 | 5 | 6 }[] = [
+  { icon: FileSpreadsheet, n: 1 },
+  { icon: Coins, n: 2 },
+  { icon: ChartNoAxesCombined, n: 3 },
+  { icon: CalendarDays, n: 4 },
+  { icon: NotebookPen, n: 5 },
+  { icon: Smartphone, n: 6 },
 ];
 
-const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: UserPlus, title: "สมัครด้วยอีเมล", body: "ฟรี ใช้เวลาไม่ถึงนาที" },
-  { icon: Upload, title: "นำเข้าไฟล์", body: "เลือกโบรก แล้วอัปโหลดไฟล์ที่ส่งออกมา" },
-  { icon: ChartNoAxesCombined, title: "ดูผลการเทรด", body: "ภาพรวม ปฏิทิน และรายงาน พร้อมใช้ทันที" },
+const STEPS: { icon: LucideIcon; n: 1 | 2 | 3 }[] = [
+  { icon: UserPlus, n: 1 },
+  { icon: Upload, n: 2 },
+  { icon: ChartNoAxesCombined, n: 3 },
 ];
 
-export default function WelcomePage() {
+export default async function WelcomePage() {
+  const { m } = await getI18n();
+  const w = m.welcome;
   return (
     <div className="min-h-dvh px-2.5 pt-3 pb-10 sm:px-5 sm:pt-6 lg:px-7 lg:pt-8">
       <div className="mx-auto w-full max-w-[1180px] space-y-4">
@@ -45,12 +49,13 @@ export default function WelcomePage() {
             <BrandMark size={28} className="-my-1" />
             <Wordmark className="text-[17px]" />
           </Link>
-          <nav className="flex items-center gap-1.5 sm:gap-2">
-            <Link href="/login" className="rounded-[9px] px-3 py-2 text-[13px] hover:bg-[var(--hover)]">
-              เข้าสู่ระบบ
+          <nav className="flex items-center gap-0.5 sm:gap-2">
+            <LanguagePicker />
+            <Link href="/login" className="rounded-[9px] px-2.5 py-2 text-[13px] whitespace-nowrap hover:bg-[var(--hover)] sm:px-3">
+              {m.common.signIn}
             </Link>
-            <Link href="/login?mode=signup" className="btn btn-primary">
-              เริ่มใช้ฟรี
+            <Link href="/login?mode=signup" className="btn btn-primary whitespace-nowrap">
+              {m.common.startFree}
             </Link>
           </nav>
         </header>
@@ -59,25 +64,25 @@ export default function WelcomePage() {
           {/* Hero */}
           <section className="grid items-center gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
             <div>
-              <p className="mb-3 text-[13px] text-muted">สมุดบันทึกการเทรดหุ้น US</p>
+              <p className="mb-3 text-[13px] text-muted">{w.eyebrow}</p>
               <h1 className="text-[34px] leading-[1.12] font-medium tracking-[-0.04em] sm:text-[46px]">
-                รู้จริงว่าเทรดแล้ว
+                {w.heroLine1}
                 <br />
-                ได้หรือเสียเท่าไหร่
+                {w.heroLine2}
               </h1>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted">
-                นำเข้าไฟล์จาก Dime หรือ Webull แล้วดูกำไรขาดทุนสุทธิหลังหักค่าธรรมเนียม ทั้งดอลลาร์และบาท ในไม่กี่วินาที
+                {w.heroBody}
               </p>
               <div className="mt-7 flex flex-wrap gap-2.5">
                 <Link href="/login?mode=signup" className="btn btn-primary px-5 py-2.5 text-sm">
-                  เริ่มใช้ฟรี <ArrowRight size={15} aria-hidden="true" />
+                  {m.common.startFree} <ArrowRight size={15} aria-hidden="true" />
                 </Link>
                 <Link href="/login" className="btn px-5 py-2.5 text-sm">
-                  มีบัญชีแล้ว
+                  {w.haveAccount}
                 </Link>
               </div>
               <div className="mt-6 flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
-                <span className="mr-1">นำเข้าได้จาก</span>
+                <span className="mr-1">{w.importFrom}</span>
                 {["Dime!", "Webull", "CSV / Excel"].map((b) => (
                   <span key={b} className="tag bg-bg text-fg">
                     {b}
@@ -92,15 +97,15 @@ export default function WelcomePage() {
 
           {/* Features */}
           <section>
-            <h2 className="mb-5 text-[22px] font-medium tracking-[-0.03em] sm:text-[26px]">ทุกอย่างที่คนเทรดสั้นต้องรู้ ในที่เดียว</h2>
+            <h2 className="mb-5 text-[22px] font-medium tracking-[-0.03em] sm:text-[26px]">{w.featuresTitle}</h2>
             <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="card">
+              {FEATURES.map(({ icon: Icon, n }) => (
+                <div key={n} className="card">
                   <span className="mb-3 grid h-9 w-9 place-items-center rounded-[10px]" style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)" }}>
                     <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
                   </span>
-                  <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
-                  <p className="mt-1 text-[13px] leading-relaxed text-muted">{body}</p>
+                  <h3 className="text-sm font-semibold tracking-tight">{w[`f${n}Title`]}</h3>
+                  <p className="mt-1 text-[13px] leading-relaxed text-muted">{w[`f${n}Body`]}</p>
                 </div>
               ))}
             </div>
@@ -108,17 +113,17 @@ export default function WelcomePage() {
 
           {/* How it works */}
           <section>
-            <h2 className="mb-5 text-[22px] font-medium tracking-[-0.03em] sm:text-[26px]">เริ่มได้ใน 3 ขั้นตอน</h2>
+            <h2 className="mb-5 text-[22px] font-medium tracking-[-0.03em] sm:text-[26px]">{w.stepsTitle}</h2>
             <ol className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-              {STEPS.map(({ icon: Icon, title, body }, i) => (
-                <li key={title} className="card flex items-start gap-3">
+              {STEPS.map(({ icon: Icon, n }, i) => (
+                <li key={n} className="card flex items-start gap-3">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand text-sm font-semibold text-brand-ink">{i + 1}</span>
                   <div>
                     <h3 className="flex items-center gap-1.5 text-sm font-semibold tracking-tight">
                       <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
-                      {title}
+                      {w[`s${n}Title`]}
                     </h3>
-                    <p className="mt-1 text-[13px] text-muted">{body}</p>
+                    <p className="mt-1 text-[13px] text-muted">{w[`s${n}Body`]}</p>
                   </div>
                 </li>
               ))}
@@ -131,27 +136,27 @@ export default function WelcomePage() {
               <Lock size={24} strokeWidth={1.5} aria-hidden="true" />
             </span>
             <div className="flex-1">
-              <h2 className="text-base font-semibold tracking-tight">ข้อมูลการเทรดเป็นของคุณ</h2>
+              <h2 className="text-base font-semibold tracking-tight">{w.privacyTitle}</h2>
               <ul className="mt-2 space-y-1 text-[13px] text-muted">
-                <li>แต่ละบัญชีเห็นได้เฉพาะข้อมูลของตัวเอง ล็อกไว้ที่ระดับฐานข้อมูล</li>
-                <li>ไม่ต้องให้รหัสผ่านหรือเชื่อมบัญชีโบรก แค่อัปโหลดไฟล์ที่ส่งออกมาเอง</li>
-                <li>ดาวน์โหลดรายการทั้งหมดเป็น CSV ได้ทุกเมื่อ</li>
+                <li>{w.p1}</li>
+                <li>{w.p2}</li>
+                <li>{w.p3}</li>
               </ul>
             </div>
             <Link href="/login?mode=signup" className="btn btn-primary self-start sm:self-center">
-              เริ่มใช้ฟรี <ArrowRight size={15} aria-hidden="true" />
+              {m.common.startFree} <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </section>
         </main>
 
         <footer className="glass flex flex-col items-center justify-between gap-1.5 rounded-[16px] px-4 py-3 text-center text-[11px] text-muted sm:flex-row sm:text-left">
-          <span>Stocksme · เครื่องมือบันทึกและคำนวณผลการเทรด ไม่ใช่คำแนะนำการลงทุน · ตัวเลขบนหน้านี้เป็นข้อมูลตัวอย่าง</span>
+          <span>{w.footer}</span>
           <span className="flex gap-3">
             <Link href="/privacy" className="hover:text-fg">
-              นโยบายความเป็นส่วนตัว
+              {m.common.privacy}
             </Link>
             <Link href="/terms" className="hover:text-fg">
-              เงื่อนไขการใช้งาน
+              {m.common.terms}
             </Link>
           </span>
         </footer>

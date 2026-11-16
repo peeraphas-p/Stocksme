@@ -42,11 +42,19 @@ export interface OpenPosition {
   firstBuyAt: string;
 }
 
+export interface OversellWarning {
+  symbol: string;
+  /** จำนวนหุ้นที่ขายเกิน */
+  qty: string;
+  /** เวลาของรายการขาย (ISO) */
+  at: string;
+}
+
 export interface PnlResult {
   closed: ClosedLot[];
   open: OpenPosition[];
-  /** ขายเกินจำนวนที่ถืออยู่ (ข้อมูลซื้อหาย หรือ short) */
-  warnings: string[];
+  /** ขายเกินจำนวนที่ถืออยู่ (ข้อมูลซื้อหาย หรือ short) — หน้าเว็บแปลงเป็นข้อความตามภาษา */
+  warnings: OversellWarning[];
 }
 
 interface Lot {
@@ -136,7 +144,7 @@ const nyDay = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America
 export function computePnl(trades: Trade[], fallbackFx = 35, asOf: Date = new Date()): PnlResult {
   const books = new Map<string, Lot[]>();
   const closed: ClosedLot[] = [];
-  const warnings: string[] = [];
+  const warnings: OversellWarning[] = [];
   const symbolOf = (t: Trade) => t.symbol.trim().toUpperCase();
   const held = (symbol: string) => (books.get(symbol) ?? []).reduce((s, l) => s.plus(l.qty), new Decimal(0));
 
@@ -203,9 +211,7 @@ export function computePnl(trades: Trade[], fallbackFx = 35, asOf: Date = new Da
       if (lot.qty.lte(DUST)) book.shift();
     }
     if (remaining.gt(DUST)) {
-      warnings.push(
-        `${symbol}: ขาย ${remaining.toString()} หุ้น เกินจำนวนที่ถืออยู่ (${new Date(tr.executed_at).toLocaleString("th-TH")}) — อาจขาดรายการซื้อ`,
-      );
+      warnings.push({ symbol, qty: remaining.toString(), at: tr.executed_at });
     }
   }
 

@@ -8,24 +8,24 @@ import { PnlPeakCard } from "@/components/PeakCards";
 import PnlCalendar from "@/components/PnlCalendar";
 import { Ticker, TickerLogo, tickerLabel } from "@/components/Ticker";
 import { CurrencyToggle, Empty, ErrorBox, PageHeader, Segmented, Stat, DashboardSkeleton } from "@/components/ui";
-import { money, pct, tone, tradeTime } from "@/lib/format";
+import { money, pct, tone } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
 import { dailyPnl, equityCurve, filterByPeriod, groupPnl, localDay, roundTrips, summarize, type Period } from "@/lib/stats";
 import { totals, usePrices, valuePositions } from "@/lib/prices";
 import { useApp } from "@/lib/useApp";
 
-const PERIODS: { value: Period; label: string }[] = [
-  { value: "today", label: "วันนี้" },
-  { value: "week", label: "สัปดาห์" },
-  { value: "month", label: "เดือน" },
-  { value: "year", label: "ปี" },
-  { value: "all", label: "ทั้งหมด" },
-];
-const PERIOD_TEXT: Record<Period, string> = { today: "วันนี้", week: "สัปดาห์นี้", month: "เดือนนี้", year: "ปีนี้", all: "ทั้งหมด" };
+const PERIOD_KEYS: Period[] = ["today", "week", "month", "year", "all"];
+/** ข้อความ "ช่วงนี้" ของแต่ละช่วง เช่น เดือนนี้ */
+const PERIOD_THIS = { today: "thisToday", week: "thisWeek", month: "thisMonth", year: "thisYear", all: "allTime" } as const;
 
 export default function Dashboard() {
   const app = useApp();
   const { currency, pnl } = app;
+  const { m, t, fmt } = useI18n();
+  const o = m.overview;
   const [period, setPeriod] = useState<Period>("month");
+  const PERIODS = PERIOD_KEYS.map((value) => ({ value, label: m.periods[value] }));
+  const periodText = m.periods[PERIOD_THIS[period]];
 
   const lots = useMemo(() => filterByPeriod(pnl.closed, period), [pnl.closed, period]);
   const s = useMemo(() => summarize(lots, currency), [lots, currency]);
@@ -34,12 +34,12 @@ export default function Dashboard() {
   const recent = useMemo(() => roundTrips(lots, currency).sort((a, b) => b.sellAt.localeCompare(a.sellAt)).slice(0, 5), [lots, currency]);
   const allDaily = useMemo(() => dailyPnl(pnl.closed, currency), [pnl.closed, currency]);
   const allCounts = useMemo(() => {
-    const m = new Map<string, number>();
+    const counts = new Map<string, number>();
     for (const r of roundTrips(pnl.closed, currency)) {
       const k = localDay(r.sellAt);
-      m.set(k, (m.get(k) ?? 0) + 1);
+      counts.set(k, (counts.get(k) ?? 0) + 1);
     }
-    return m;
+    return counts;
   }, [pnl.closed, currency]);
 
   const cost = lots.reduce((sum, l) => sum + (currency === "USD" ? l.costUsd : l.costThb), 0);
@@ -50,21 +50,21 @@ export default function Dashboard() {
   const grossLoss = s.avgLoss * s.losses;
   const ratio = s.avgLoss !== 0 ? s.avgWin / Math.abs(s.avgLoss) : null;
   const feesShown = currency === "USD" ? s.feesUsd : s.feesUsd * app.latestFx;
-  const today = new Date().toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+  const today = fmt.monthYear(new Date());
 
   if (!app.loading && app.trades.length === 0) {
     return (
       <>
-        <PageHeader eyebrow="พื้นที่เทรดส่วนตัวของคุณ" title="ภาพรวม" />
+        <PageHeader eyebrow={o.emptyEyebrow} title={o.title} />
         <ErrorBox error={app.error} />
-        <Empty icon={Upload} title="ยังไม่มีข้อมูล">
-          เริ่มจาก{" "}
+        <Empty icon={Upload} title={o.emptyTitle}>
+          {o.emptyStart}{" "}
           <Link href="/import" className="text-accent underline underline-offset-2">
-            นำเข้าไฟล์จากโบรก
+            {o.emptyImport}
           </Link>{" "}
-          หรือ{" "}
+          {o.emptyOr}{" "}
           <Link href="/trades" className="text-accent underline underline-offset-2">
-            เพิ่มรายการเอง
+            {o.emptyAdd}
           </Link>
         </Empty>
       </>
@@ -74,7 +74,7 @@ export default function Dashboard() {
   if (app.loading) {
     return (
       <>
-        <PageHeader eyebrow={today} title="ภาพรวม" />
+        <PageHeader eyebrow={today} title={o.title} />
         <DashboardSkeleton />
       </>
     );
@@ -82,8 +82,8 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHeader eyebrow={today} title="ภาพรวม">
-        <Segmented label="ช่วงเวลา" value={period} onChange={setPeriod} options={PERIODS} />
+      <PageHeader eyebrow={today} title={o.title}>
+        <Segmented label={m.periods.label} value={period} onChange={setPeriod} options={PERIODS} />
         <CurrencyToggle value={currency} onChange={app.setCurrency} />
       </PageHeader>
       <ErrorBox error={app.error} />
@@ -91,7 +91,7 @@ export default function Dashboard() {
       {pnl.warnings.length > 0 && (
         <Link href="/trades" className="card flex items-center gap-2.5 text-[13px] text-loss">
           <TriangleAlert size={16} className="shrink-0" aria-hidden="true" />
-          มี {pnl.warnings.length} รายการที่ขายเกินจำนวนที่ถือ ตัวเลขอาจไม่ครบ
+          {t(o.oversellWarning, { n: pnl.warnings.length })}
           <ArrowRight size={14} className="ml-auto shrink-0" aria-hidden="true" />
         </Link>
       )}
@@ -101,25 +101,25 @@ export default function Dashboard() {
         <div className="space-y-3 sm:space-y-4">
           <section className="card">
             <div className="panel-title">
-              <h2>กำไรสะสม</h2>
+              <h2>{o.cumulative}</h2>
             </div>
             <div className="mb-4 flex gap-8">
               <div className="flex flex-col gap-1">
                 <span className="flex items-center gap-1.5 text-[11px] text-muted">
                   <i className="dot bg-gain" />
-                  ไม้กำไรรวม
+                  {o.grossWin}
                 </span>
                 <strong className="big-number text-xl">{money(grossWin, currency)}</strong>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="flex items-center gap-1.5 text-[11px] text-muted">
                   <i className="dot bg-loss" />
-                  ไม้ขาดทุนรวม
+                  {o.grossLoss}
                 </span>
                 <strong className="big-number text-xl">{money(Math.abs(grossLoss), currency)}</strong>
               </div>
             </div>
-            {curve.length ? <EquityChart data={curve} currency={currency} /> : <div className="py-14 text-center text-[13px] text-muted">ไม่มีไม้ที่ปิดในช่วงนี้</div>}
+            {curve.length ? <EquityChart data={curve} currency={currency} /> : <div className="py-14 text-center text-[13px] text-muted">{o.noClosed}</div>}
           </section>
             <Link href="/trades" className="card flex items-center gap-3 !py-4 transition-transform hover:-translate-y-0.5">
               <span className="grid h-9 w-9 place-items-center rounded-[10px]" style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)" }}>
@@ -127,17 +127,23 @@ export default function Dashboard() {
               </span>
               <span className="flex flex-col">
                 <strong className="text-xs font-medium">
-                  ถืออยู่ {pnl.open.length} ตัว
-                  {cost > 0 && <span className={`tag ml-2 ${s.net >= 0 ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>{(s.net >= 0 ? "+" : "") + ((s.net / cost) * 100).toFixed(2)}% ของทุนที่ใช้ {PERIOD_TEXT[period]}</span>}
+                  {t(o.holding, { n: pnl.open.length })}
+                  {cost > 0 && (
+                    <span className={`tag ml-2 ${s.net >= 0 ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>
+                      {t(o.pctOfCapital, { p: (s.net >= 0 ? "+" : "") + ((s.net / cost) * 100).toFixed(2) + "%", period: periodText })}
+                    </span>
+                  )}
                 </strong>
                 <span className="text-[11px] text-muted">
                   {live.priced > 0 ? (
                     <>
-                      มูลค่า {money(currency === "USD" ? live.marketUsd : live.marketUsd * app.latestFx, currency)} ·{" "}
-                      <span className={tone(live.unrealizedUsd)}>{money(currency === "USD" ? live.unrealizedUsd : live.unrealizedThb, currency, { sign: true })} ยังไม่ได้ขาย</span>
+                      {t(o.marketValue, { v: money(currency === "USD" ? live.marketUsd : live.marketUsd * app.latestFx, currency) })} ·{" "}
+                      <span className={tone(live.unrealizedUsd)}>
+                        {money(currency === "USD" ? live.unrealizedUsd : live.unrealizedThb, currency, { sign: true })} {m.common.unrealized}
+                      </span>
                     </>
                   ) : (
-                    <>ทุน {money(openCost, currency)}</>
+                    <>{t(o.costOnly, { v: money(openCost, currency) })}</>
                   )}
                 </span>
               </span>
@@ -149,11 +155,11 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <Stat icon={Percent} label="Win rate" value={pct(s.winRate)} sub={`ชนะ ${s.wins} · แพ้ ${s.losses}`} />
-        <Stat icon={Scale} label="Profit factor" value={s.profitFactor == null ? "—" : s.profitFactor.toFixed(2)} sub="กำไรรวม ÷ ขาดทุนรวม" />
+        <Stat icon={Percent} label="Win rate" value={pct(s.winRate)} sub={t(o.winsLosses, { w: s.wins, l: s.losses })} />
+        <Stat icon={Scale} label="Profit factor" value={s.profitFactor == null ? "—" : s.profitFactor.toFixed(2)} sub={o.pfSub} />
         <Stat
           icon={TrendingUp}
-          label="กำไรเฉลี่ย ÷ ขาดทุนเฉลี่ย"
+          label={o.avgRatio}
           value={ratio == null ? "—" : ratio.toFixed(2)}
           sub={
             <>
@@ -161,24 +167,24 @@ export default function Dashboard() {
             </>
           }
         />
-        <Stat icon={Coins} label="ค่าธรรมเนียมที่จ่าย" value={money(feesShown, currency)} sub={`ไม้ที่ปิด${PERIOD_TEXT[period] === "ทั้งหมด" ? "ทั้งหมด" : PERIOD_TEXT[period]}`} />
+        <Stat icon={Coins} label={o.feesPaid} value={money(feesShown, currency)} sub={t(o.feesSub, { period: periodText })} />
       </div>
 
       <div className="grid gap-3 sm:gap-4 lg:grid-cols-[1.3fr_1fr]">
         <section className="card">
           <div className="panel-title">
-            <h2>ไม้ล่าสุด</h2>
+            <h2>{o.recent}</h2>
             <Link href="/trades" className="btn-ghost">
-              ดูทั้งหมด <ArrowRight size={13} aria-hidden="true" />
+              {o.viewAll} <ArrowRight size={13} aria-hidden="true" />
             </Link>
           </div>
           {recent.length === 0 ? (
-            <div className="py-8 text-center text-[13px] text-muted">ไม่มีไม้ที่ปิดในช่วงนี้</div>
+            <div className="py-8 text-center text-[13px] text-muted">{o.noClosed}</div>
           ) : (
             <div>
               {recent.map((r) => (
                 <div key={r.sellTradeId} className="flex items-center gap-3 border-t border-border py-2.5 first:border-0 first:pt-0 last:pb-0">
-                  <Ticker symbol={r.symbol} size={34} className="flex-1 text-[13px]" sub={r.sellTradeId.startsWith("expired:") ? "หมดอายุ " + tradeTime(r.sellAt) : "ขาย " + tradeTime(r.sellAt)} />
+                  <Ticker symbol={r.symbol} size={34} className="flex-1 text-[13px]" sub={t(r.sellTradeId.startsWith("expired:") ? o.expiredOn : o.soldOn, { d: fmt.tradeTime(r.sellAt) })} />
                   <strong className={`flex items-center gap-1 text-[13px] font-medium whitespace-nowrap ${tone(r.pnl)}`}>
                     {r.pnl >= 0 ? <ArrowUpRight size={14} aria-hidden="true" /> : <ArrowDownRight size={14} aria-hidden="true" />}
                     {money(r.pnl, currency, { sign: true })}
@@ -191,8 +197,8 @@ export default function Dashboard() {
 
         <section className="card">
           <div className="panel-title">
-            <h2>ผลตามหุ้น</h2>
-            <span className="text-[11px]">{symbols.length} ตัว</span>
+            <h2>{o.bySymbol}</h2>
+            <span className="text-[11px]">{t(m.common.stocksN, { n: symbols.length })}</span>
           </div>
           {symbols.length === 0 ? (
             <div className="py-8 text-center text-[13px] text-muted">—</div>
@@ -206,10 +212,10 @@ export default function Dashboard() {
         <PnlCalendar daily={allDaily} counts={allCounts} currency={currency} />
         <section className="card">
           <div className="panel-title">
-            <h2>กำไร/ขาดทุนรายวัน</h2>
-            <span className="text-[11px]">{PERIOD_TEXT[period]}</span>
+            <h2>{o.daily}</h2>
+            <span className="text-[11px]">{periodText}</span>
           </div>
-          {curve.length ? <DailyBars data={curve} currency={currency} /> : <div className="py-14 text-center text-[13px] text-muted">ไม่มีไม้ที่ปิดในช่วงนี้</div>}
+          {curve.length ? <DailyBars data={curve} currency={currency} /> : <div className="py-14 text-center text-[13px] text-muted">{o.noClosed}</div>}
         </section>
       </div>
     </>
@@ -223,6 +229,8 @@ type SymbolSort = "pnl" | "trades" | "name";
  * ความยาวแถบเทียบกับตัวที่กำไร/ขาดทุนมากที่สุด
  */
 function SymbolBars({ rows, currency }: { rows: ReturnType<typeof groupPnl>; currency: "USD" | "THB" }) {
+  const { m, t } = useI18n();
+  const o = m.overview;
   const [all, setAll] = useState(false);
   const [sort, setSort] = useState<SymbolSort>("pnl");
   const sorted =
@@ -236,17 +244,17 @@ function SymbolBars({ rows, currency }: { rows: ReturnType<typeof groupPnl>; cur
       {all && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Segmented
-            label="เรียงตาม"
+            label={o.sortBy}
             value={sort}
             onChange={setSort}
             options={[
-              { value: "pnl", label: "กำไร" },
-              { value: "trades", label: "จำนวนเทรด" },
-              { value: "name", label: "ชื่อ" },
+              { value: "pnl", label: o.sortPnl },
+              { value: "trades", label: o.sortTrades },
+              { value: "name", label: o.sortName },
             ]}
           />
           <span className="text-[11px] text-muted">
-            กำไร {wins} ตัว · ขาดทุน {rows.length - wins} ตัว
+            {t(o.gainLossCount, { w: wins, l: rows.length - wins })}
           </span>
         </div>
       )}
@@ -258,7 +266,7 @@ function SymbolBars({ rows, currency }: { rows: ReturnType<typeof groupPnl>; cur
                 <TickerLogo symbol={g.key} size={20} />
                 <strong className="font-medium">{tickerLabel(g.key)}</strong>
                 <span className="text-[11px] text-muted">
-                  {g.count} เทรด · win {pct(g.wins / g.count)}
+                  {t(m.common.winLine, { n: g.count, p: pct(g.wins / g.count) })}
                 </span>
                 <strong className={`ml-auto font-medium ${tone(g.pnl)}`}>{money(g.pnl, currency, { sign: true })}</strong>
               </div>
@@ -268,14 +276,14 @@ function SymbolBars({ rows, currency }: { rows: ReturnType<typeof groupPnl>; cur
             </div>
           ) : (
             <div key={"gap" + i} className="text-center text-[11px] text-muted">
-              ⋯ อีก {rows.length - 10} ตัว
+              {t(o.more, { n: rows.length - 10 })}
             </div>
           ),
         )}
       </div>
       {collapsible && (
         <button className="btn w-full text-xs" onClick={() => setAll(!all)} aria-expanded={all}>
-          {all ? "ย่อเหลือ 5 ดีสุด / 5 แย่สุด" : `ดูทั้งหมด ${rows.length} ตัว`}
+          {all ? o.collapse : t(o.showAll, { n: rows.length })}
         </button>
       )}
     </div>
