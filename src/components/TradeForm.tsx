@@ -39,6 +39,8 @@ export default function TradeForm({
   const [emotion, setEmotion] = useState(init?.emotion ?? "");
   const [note, setNote] = useState(init?.note ?? "");
   const [broker, setBroker] = useState(init?.broker ?? "");
+  const [stop, setStop] = useState(init?.stop_price != null ? String(init.stop_price) : "");
+  const [target, setTarget] = useState(init?.target_price != null ? String(init.target_price) : "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -57,6 +59,12 @@ export default function TradeForm({
   }, [at, fxTouched]);
 
   const total = Number(qty) * Number(price);
+  // แผนความเสี่ยง: เสียต่อหุ้นถ้าโดน stop / ได้ต่อหุ้นถ้าถึงเป้า
+  const p = Number(price);
+  const riskPer = stop !== "" && p > 0 ? p - Number(stop) : null;
+  const rewardPer = target !== "" && p > 0 ? Number(target) - p : null;
+  const riskTotal = riskPer != null && riskPer > 0 && Number(qty) > 0 ? riskPer * Number(qty) : null;
+  const rr = riskPer != null && riskPer > 0 && rewardPer != null && rewardPer > 0 ? rewardPer / riskPer : null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,6 +82,8 @@ export default function TradeForm({
       emotion: emotion || null,
       note: note || null,
       broker: broker || null,
+      stop_price: side === "BUY" && stop !== "" ? stop : null,
+      target_price: side === "BUY" && target !== "" ? target : null,
     };
     try {
       if (trade) await updateTrade(trade.id, row);
@@ -117,6 +127,25 @@ export default function TradeForm({
           <span>ค่าธรรมเนียม (USD)</span>
           <input inputMode="decimal" type="number" step="any" min="0" value={fee} onChange={(e) => setFee(e.target.value)} />
         </label>
+        {side === "BUY" && (
+          <>
+            <label className="field">
+              <span>จุดตัดขาดทุน (stop)</span>
+              <input inputMode="decimal" type="number" step="any" min="0" value={stop} onChange={(e) => setStop(e.target.value)} placeholder="ไม่บังคับ" />
+            </label>
+            <label className="field">
+              <span>เป้าหมายราคา</span>
+              <input inputMode="decimal" type="number" step="any" min="0" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="ไม่บังคับ" />
+            </label>
+            {(riskTotal != null || (riskPer != null && riskPer <= 0)) && (
+              <p className={`col-span-2 -mt-1 text-xs ${riskPer != null && riskPer <= 0 ? "text-loss" : "text-muted"}`}>
+                {riskPer != null && riskPer <= 0
+                  ? "จุดตัดขาดทุนต้องต่ำกว่าราคาซื้อ"
+                  : `เสี่ยง $${riskTotal!.toLocaleString("en-US", { maximumFractionDigits: 2 })} ถ้าโดน stop${rr != null ? ` · ได้ ${rr.toFixed(2)} เท่าของความเสี่ยงถ้าถึงเป้า (1:${rr.toFixed(1)})` : ""}`}
+              </p>
+            )}
+          </>
+        )}
         <label className="field">
           <span>อัตรา ฿/$</span>
           <input

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computePnl, orderTrades } from "./pnl";
-import { summarize, equityCurve } from "./stats";
+import { equityCurve, rBucket, rSummary, summarize, yearCsv, yearlySummary } from "./stats";
 import type { Trade } from "./types";
 
 let n = 0;
@@ -195,5 +195,67 @@ describe("expired options", () => {
 
   it("does not touch ordinary stocks", () => {
     expect(computePnl([t("BUY", 1, 10, "2020-01-02T15:00:00Z")], 35, new Date("2026-11-16T12:00:00Z")).open).toHaveLength(1);
+  });
+});
+
+describe("risk plan (R-multiple)", () => {
+  it("measures each closed lot against the stop set at entry", () => {
+    const r = computePnl([
+      t("BUY", 10, 100, "2026-05-01T14:00:00Z", { stop_price: 95 }), // risk $50
+      t("SELL", 10, 110, "2026-05-02T14:00:00Z"),
+    ]);
+    expect(r.closed[0]).toMatchObject({ riskUsd: 50, rMultiple: 2 });
+  });
+
+  it("splits risk across partial sells", () => {
+    const r = computePnl([
+      t("BUY", 10, 100, "2026-05-01T14:00:00Z", { stop_price: 98 }), // $2/share
+      t("SELL", 4, 96, "2026-05-02T14:00:00Z"), // −$16 on $8 risk = −2R
+    ]);
+    expect(r.closed[0]).toMatchObject({ qty: 4, riskUsd: 8, rMultiple: -2 });
+  });
+
+  it("ignores missing or nonsensical stops", () => {
+    const none = computePnl([t("BUY", 1, 100, "2026-05-01T14:00:00Z"), t("SELL", 1, 101, "2026-05-02T14:00:00Z")]);
+    const above = computePnl([t("BUY", 1, 100, "2026-05-01T14:00:00Z", { stop_price: 105 }), t("SELL", 1, 101, "2026-05-02T14:00:00Z")]);
+    expect(none.closed[0]).toMatchObject({ riskUsd: null, rMultiple: null });
+    expect(above.closed[0]).toMatchObject({ riskUsd: null, rMultiple: null });
+  });
+});
+
+describe("rSummary", () => {
+  it("summarises planned trades and flags losses beyond the plan", () => {
+    const r = computePnl([
+      t("BUY", 10, 100, "2026-05-01T14:00:00Z", { stop_price: 95 }),
+      t("SELL", 10, 110, "2026-05-02T14:00:00Z"), // +2R
+      t("BUY", 10, 100, "2026-05-03T14:00:00Z", { stop_price: 95 }),
+      t("SELL", 10, 85, "2026-05-04T14:00:00Z"), // −3R (blew through the stop)
+      t("BUY", 1, 50, "2026-05-05T14:00:00Z"),
+      t("SELL", 1, 55, "2026-05-06T14:00:00Z"), // no plan
+    ]);
+    const s = rSummary(r.closed);
+    expect(s).toEqual({ planned: 2, total: 3, avgR: -0.5, overLoss: 1, bigWins: 1 });
+    expect(rBucket(-3)).toMatch(/^1\./);
+    expect(rBucket(2)).toMatch(/^5\./);
+    expect(rBucket(null)).toMatch(/^6\./);
+  });
+});
+
+describe("yearly report", () => {
+  it("totals closed trades per sell year and exports them with FX used", () => {
+    const r = computePnl([
+      t("BUY", 1, 100, "2025-12-10T15:00:00Z", { fx_rate: 34 }),
+      t("SELL", 1, 110, "2025-12-11T15:00:00Z", { fx_rate: 35 }),
+      t("BUY", 1, 100, "2026-02-10T15:00:00Z", { fx_rate: 33 }),
+      t("SELL", 1, 90, "2026-02-11T15:00:00Z", { fx_rate: 33 }),
+    ]);
+    const y = yearlySummary(r.closed);
+    expect(y.map((row) => [row.year, row.trades, row.netUsd, row.netThb])).toEqual([
+      ["2026", 1, -10, -330],
+      ["2025", 1, 10, 110 * 35 - 100 * 34],
+    ]);
+    const csv = yearCsv(r.closed, "2025").split("\n");
+    expect(csv).toHaveLength(2);
+    expect(csv[1]).toContain("34.0000,35.0000");
   });
 });

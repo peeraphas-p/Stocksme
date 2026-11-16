@@ -25,6 +25,10 @@ export interface ClosedLot {
   holdingMinutes: number;
   strategyTag: string | null;
   emotion: string | null;
+  /** ความเสี่ยงที่วางแผนไว้ (USD) = (ราคาซื้อ − stop) × จำนวน — null ถ้าไม่ได้ตั้ง stop ไว้ต่ำกว่าราคาซื้อ */
+  riskUsd: number | null;
+  /** กำไร/ขาดทุนเป็นกี่เท่าของความเสี่ยงที่วางไว้ (R-multiple) */
+  rMultiple: number | null;
   /** ออปชันที่หมดอายุโดยไม่มีรายการขาย — ปิดให้อัตโนมัติที่ $0 ณ วันหมดอายุ */
   expired?: boolean;
 }
@@ -46,6 +50,7 @@ export interface PnlResult {
 }
 
 interface Lot {
+  stop: Decimal | null;
   tradeId: string;
   at: string;
   price: Decimal;
@@ -112,6 +117,14 @@ function groupsByTime(trades: Trade[]): Trade[][] {
   return groups;
 }
 
+/** ความเสี่ยงต่อไม้ตามแผน: ถ้าโดน stop จะเสีย (ราคาซื้อ − stop) × จำนวน */
+function riskOf(lot: Lot, qty: Decimal, pnl: Decimal): { riskUsd: number | null; rMultiple: number | null } {
+  if (!lot.stop) return { riskUsd: null, rMultiple: null };
+  const risk = lot.price.minus(lot.stop).times(qty);
+  if (risk.lte(0)) return { riskUsd: null, rMultiple: null };
+  return { riskUsd: risk.toNumber(), rMultiple: pnl.div(risk).toNumber() };
+}
+
 /** วันที่ (YYYY-MM-DD) ตามเวลานิวยอร์ก */
 const nyDay = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(d);
 
@@ -144,6 +157,7 @@ export function computePnl(trades: Trade[], fallbackFx = 35, asOf: Date = new Da
         price,
         qty,
         costPerShare: price.plus(fee.div(qty)),
+        stop: tr.stop_price != null && tr.stop_price !== "" && D(tr.stop_price).lt(price) ? D(tr.stop_price) : null,
         fx,
         strategyTag: tr.strategy_tag ?? null,
         emotion: tr.emotion ?? null,
@@ -181,6 +195,7 @@ export function computePnl(trades: Trade[], fallbackFx = 35, asOf: Date = new Da
         pnlThb: proceedsThb.minus(costThb).toNumber(),
         holdingMinutes: Math.round((new Date(tr.executed_at).getTime() - new Date(lot.at).getTime()) / 60000),
         strategyTag: lot.strategyTag ?? tr.strategy_tag ?? null,
+        ...riskOf(lot, take, proceeds.minus(cost)),
         emotion: lot.emotion ?? tr.emotion ?? null,
       });
       lot.qty = lot.qty.minus(take);
@@ -244,6 +259,7 @@ export function computePnl(trades: Trade[], fallbackFx = 35, asOf: Date = new Da
         strategyTag: lot.strategyTag,
         emotion: lot.emotion,
         expired: true,
+        ...riskOf(lot, lot.qty, cost.neg()),
       });
     }
     book.length = 0;

@@ -87,6 +87,7 @@ export default function TradesPage() {
                   <th className="p-3 text-right hidden sm:table-cell">ซื้อ → ขาย</th>
                   <th className="p-3 text-right hidden md:table-cell">ถือ</th>
                   <th className="p-3 hidden md:table-cell">กลยุทธ์</th>
+                  <th className="p-3 text-right hidden lg:table-cell" title="กำไร/ขาดทุนเป็นกี่เท่าของความเสี่ยงที่วางไว้ (ต้องตั้ง stop ตอนซื้อ)">R</th>
                   <th className="p-3 text-right">กำไร/ขาดทุน</th>
                 </tr>
               </thead>
@@ -109,6 +110,9 @@ export default function TradesPage() {
                       </td>
                       <td className="p-3 text-right hidden md:table-cell text-muted">{holding(l.holdingMinutes)}</td>
                       <td className="p-3 hidden md:table-cell text-muted">{l.strategyTag ?? "—"}</td>
+                      <td className={`p-3 text-right hidden lg:table-cell whitespace-nowrap ${l.rMultiple == null ? "text-muted" : tone(l.rMultiple)}`}>
+                        {l.rMultiple == null ? "—" : `${l.rMultiple > 0 ? "+" : ""}${l.rMultiple.toFixed(1)}R`}
+                      </td>
                       <td className={`p-3 text-right font-medium whitespace-nowrap ${tone(v)}`}>
                         {money(v, currency, { sign: true })}
                         <div className="text-[11px] font-normal opacity-80">{cost ? ((v / cost) * 100).toFixed(2) + "%" : ""}</div>

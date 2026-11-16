@@ -127,3 +127,113 @@ function groupRoundTripsBy(lots: ClosedLot[], c: Currency, key: (l: ClosedLot) =
   }
   return [...m.values()];
 }
+
+export interface RSummary {
+  /** จำนวนเทรด (การขาย) ที่ตั้ง stop ไว้ */
+  planned: number;
+  total: number;
+  /** กำไรรวม ÷ ความเสี่ยงรวม ของเทรดที่ตั้ง stop */
+  avgR: number | null;
+  /** เทรดที่ขาดทุนเกินแผน (แย่กว่า −1R) */
+  overLoss: number;
+  /** เทรดที่ได้ 2R ขึ้นไป */
+  bigWins: number;
+}
+
+/** สรุปวินัยตามแผน: รวม lot ของการขายแต่ละครั้งเป็น 1 เทรด */
+export function rSummary(lots: ClosedLot[]): RSummary {
+  const trips = new Map<string, { pnl: number; risk: number; planned: boolean }>();
+  for (const l of lots) {
+    const cur = trips.get(l.sellTradeId) ?? { pnl: 0, risk: 0, planned: false };
+    if (l.riskUsd != null) {
+      cur.pnl += l.pnlUsd;
+      cur.risk += l.riskUsd;
+      cur.planned = true;
+    }
+    trips.set(l.sellTradeId, cur);
+  }
+  const planned = [...trips.values()].filter((t) => t.planned && t.risk > 0);
+  const pnl = planned.reduce((s, t) => s + t.pnl, 0);
+  const risk = planned.reduce((s, t) => s + t.risk, 0);
+  return {
+    planned: planned.length,
+    total: trips.size,
+    avgR: risk > 0 ? pnl / risk : null,
+    overLoss: planned.filter((t) => t.pnl / t.risk < -1.05).length,
+    bigWins: planned.filter((t) => t.pnl / t.risk >= 2).length,
+  };
+}
+
+/** ช่วงของ R สำหรับรายงาน (มีเลขนำหน้าไว้เรียงลำดับ) */
+export function rBucket(r: number | null): string {
+  if (r == null) return "6. ไม่ได้วาง stop";
+  if (r < -1.05) return "1. ขาดทุนเกินแผน (< −1R)";
+  if (r < 0) return "2. ขาดทุนตามแผน (−1R ถึง 0)";
+  if (r < 1) return "3. กำไรน้อย (0 ถึง 1R)";
+  if (r < 2) return "4. กำไร 1R ถึง 2R";
+  return "5. กำไร 2R ขึ้นไป";
+}
+
+export interface YearRow {
+  year: string;
+  trades: number;
+  wins: number;
+  grossWinUsd: number;
+  grossLossUsd: number;
+  netUsd: number;
+  netThb: number;
+  costThb: number;
+  proceedsThb: number;
+  feesUsd: number;
+}
+
+/** สรุปไม้ที่ปิดแล้วรายปี (ตามปีของวันขาย, เวลาเครื่อง) — ใหม่สุดก่อน */
+export function yearlySummary(lots: ClosedLot[]): YearRow[] {
+  const byYear = new Map<string, ClosedLot[]>();
+  for (const l of lots) {
+    const y = localDay(l.sellAt).slice(0, 4);
+    byYear.set(y, [...(byYear.get(y) ?? []), l]);
+  }
+  return [...byYear.entries()]
+    .map(([year, ls]) => {
+      const trips = roundTrips(ls, "USD");
+      return {
+        year,
+        trades: trips.length,
+        wins: trips.filter((t) => t.pnl > 0).length,
+        grossWinUsd: trips.filter((t) => t.pnl > 0).reduce((s, t) => s + t.pnl, 0),
+        grossLossUsd: trips.filter((t) => t.pnl < 0).reduce((s, t) => s + t.pnl, 0),
+        netUsd: ls.reduce((s, l) => s + l.pnlUsd, 0),
+        netThb: ls.reduce((s, l) => s + l.pnlThb, 0),
+        costThb: ls.reduce((s, l) => s + l.costThb, 0),
+        proceedsThb: ls.reduce((s, l) => s + l.proceedsThb, 0),
+        feesUsd: ls.reduce((s, l) => s + l.feesUsd, 0),
+      };
+    })
+    .sort((a, b) => b.year.localeCompare(a.year));
+}
+
+const csvCell = (v: unknown) => {
+  const s = v == null ? "" : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+/** CSV ของไม้ที่ปิดในปีนั้น พร้อมอัตราแลกเปลี่ยนที่ใช้ (ไว้ให้นักบัญชี/ตรวจเอง) */
+export function yearCsv(lots: ClosedLot[], year: string): string {
+  const cols = [
+    "symbol", "qty", "buy_date", "sell_date", "buy_price_usd", "sell_price_usd", "cost_usd", "proceeds_usd", "fees_usd", "pnl_usd",
+    "fx_buy_thb_per_usd", "fx_sell_thb_per_usd", "cost_thb", "proceeds_thb", "pnl_thb", "note",
+  ];
+  const rows = lots
+    .filter((l) => localDay(l.sellAt).startsWith(year))
+    .sort((a, b) => a.sellAt.localeCompare(b.sellAt))
+    .map((l) =>
+      [
+        l.symbol, l.qty, localDay(l.buyAt), localDay(l.sellAt), l.buyPrice, l.sellPrice,
+        l.costUsd.toFixed(2), l.proceedsUsd.toFixed(2), l.feesUsd.toFixed(2), l.pnlUsd.toFixed(2),
+        l.costUsd ? (l.costThb / l.costUsd).toFixed(4) : "", l.proceedsUsd ? (l.proceedsThb / l.proceedsUsd).toFixed(4) : "",
+        l.costThb.toFixed(2), l.proceedsThb.toFixed(2), l.pnlThb.toFixed(2), l.expired ? "option expired worthless" : "",
+      ].map(csvCell).join(","),
+    );
+  return [cols.join(","), ...rows].join("\n");
+}
