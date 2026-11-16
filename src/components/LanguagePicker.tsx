@@ -2,18 +2,37 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, Languages } from "lucide-react";
-import { TH, US } from "country-flag-icons/react/3x2";
 import { LANGS, type Lang } from "@/i18n/config";
 import { useI18n } from "@/i18n/client";
 
-const FLAGS = { TH, US } as const;
+// ธงแบบ SVG ในตัว (ภาพจาก country-flag-icons, MIT) — ไม่ต้องลงแพ็กเกจธงทั้งโลกเพื่อใช้แค่ 2 ผืน
+// และแสดงได้ทุกระบบ ต่างจาก emoji ธงที่ Windows ไม่แสดง
+const US_STARS =
+  "m47.8 138.9-4-12.8-4.4 12.8H26.2l10.7 7.7-4 12.8 10.9-7.9 10.6 7.9-4.1-12.8 10.9-7.7zM104.1 138.9l-4.1-12.8-4.2 12.8H82.6l10.7 7.7-4 12.8 10.7-7.9 10.8 7.9-4-12.8 10.7-7.7zM160.6 138.9l-4.3-12.8-4 12.8h-13.5l11 7.7-4.2 12.8 10.7-7.9 11 7.9-4.2-12.8 10.7-7.7zM216.8 138.9l-4-12.8-4.2 12.8h-13.3l10.8 7.7-4 12.8 10.7-7.9 10.8 7.9-4.3-12.8 11-7.7zM100 75.3l-4.2 12.8H82.6L93.3 96l-4 12.6 10.7-7.8 10.8 7.8-4-12.6 10.7-7.9h-13.4zM43.8 75.3l-4.4 12.8H26.2L36.9 96l-4 12.6 10.9-7.8 10.6 7.8L50.3 96l10.9-7.9H47.8zM156.3 75.3l-4 12.8h-13.5l11 7.9-4.2 12.6 10.7-7.8 11 7.8-4.2-12.6 10.7-7.9h-13.2zM212.8 75.3l-4.2 12.8h-13.3l10.8 7.9-4 12.6 10.7-7.8 10.8 7.8-4.3-12.6 11-7.9h-13.5zM43.8 24.7l-4.4 12.6H26.2l10.7 7.9-4 12.7L43.8 50l10.6 7.9-4.1-12.7 10.9-7.9H47.8zM100 24.7l-4.2 12.6H82.6l10.7 7.9-4 12.7L100 50l10.8 7.9-4-12.7 10.7-7.9h-13.4zM156.3 24.7l-4 12.6h-13.5l11 7.9-4.2 12.7 10.7-7.9 11 7.9-4.2-12.7 10.7-7.9h-13.2zM212.8 24.7l-4.2 12.6h-13.3l10.8 7.9-4 12.7 10.7-7.9 10.8 7.9-4.3-12.7 11-7.9h-13.5z";
 
-/** ธงชาติ (SVG — แสดงได้ทุกระบบ ต่างจาก emoji ธงที่ Windows ไม่แสดง) */
+const FLAGS = {
+  US: (
+    <svg viewBox="0 0 513 342" className="block h-full w-full">
+      <path fill="#FFF" d="M0 0h513v342H0z" />
+      <path fill="#D80027" d="M0 0h513v26.3H0zM0 52.6h513v26.3H0zM0 105.2h513v26.3H0zM0 157.8h513v26.3H0zM0 210.5h513v26.3H0zM0 263.1h513v26.3H0zM0 315.7h513V342H0z" />
+      <path fill="#2E52B2" d="M0 0h256.5v184.1H0z" />
+      <path fill="#FFF" d={US_STARS} />
+    </svg>
+  ),
+  TH: (
+    <svg viewBox="0 85.333 512 341.333" className="block h-full w-full">
+      <path fill="#FFF" d="M0 85.334h512V426.66H0z" />
+      <path fill="#0052B4" d="M0 194.056h512v123.882H0z" />
+      <path fill="#D80027" d="M0 85.334h512v54.522H0zM0 372.143h512v54.522H0z" />
+    </svg>
+  ),
+} as const;
+
+/** ธงชาติหน้าชื่อภาษา */
 export function Flag({ code, className = "" }: { code: Lang; className?: string }) {
-  const C = FLAGS[LANGS.find((l) => l.code === code)!.flag];
   return (
     <span className={`inline-flex shrink-0 overflow-hidden rounded-[3px] shadow-[0_0_0_1px_var(--border)] ${className}`} aria-hidden="true">
-      <C className="block h-full w-full" />
+      {FLAGS[LANGS.find((l) => l.code === code)!.flag]}
     </span>
   );
 }

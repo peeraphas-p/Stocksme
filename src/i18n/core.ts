@@ -28,7 +28,6 @@ export function formatters(locale: string, m: Messages) {
   const local = (day: string) => new Date(day + "T00:00:00");
   return {
     dateTime: (iso: string) => dt.format(new Date(iso)),
-    dateOnly: (iso: string) => d.format(new Date(iso)),
     /** วันที่ YYYY-MM-DD (ไม่มีเวลา) */
     day: (day: string) => d.format(local(day)),
     dayFull: (day: string) => full.format(local(day)),

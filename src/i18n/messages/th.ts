@@ -6,10 +6,6 @@ export const th = {
   meta: {
     title: "Stocksme",
     description: "บันทึกการเทรดหุ้น US — กำไรขาดทุน ทั้ง USD และบาท",
-    welcomeTitle: "Stocksme — สมุดบันทึกการเทรดหุ้น US",
-    welcomeDescription: "นำเข้าไฟล์จาก Dime หรือ Webull แล้วดูกำไรขาดทุนสุทธิหลังหักค่าธรรมเนียม ทั้งดอลลาร์และบาท",
-    privacyTitle: "นโยบายความเป็นส่วนตัว — Stocksme",
-    termsTitle: "เงื่อนไขการใช้งาน — Stocksme",
   },
   common: {
     add: "เพิ่ม",
@@ -399,10 +395,6 @@ export const th = {
     fieldTime: "เวลา (ถ้าแยกคอลัมน์)",
     fieldOrderId: "เลขที่คำสั่ง",
     fieldStatus: "สถานะคำสั่ง",
-    skipStatus: "สถานะ {v}",
-    skipEmpty: "แถวว่าง",
-    skipTotal: "แถวสรุปยอด",
-    skipZero: "ไม่มีการจับคู่ (จำนวน 0)",
     errNoSymbol: "ไม่มีชื่อหุ้น",
     errSide: "อ่านซื้อ/ขายไม่ออก (“{v}”)",
     errQty: "จำนวนไม่ถูกต้อง",

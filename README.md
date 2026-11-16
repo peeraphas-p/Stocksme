@@ -29,7 +29,7 @@
 
 ## Tech stack
 
-Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Supabase (Postgres + Auth + Row Level Security) · Recharts · decimal.js · lucide-react · country-flag-icons · Vitest · Netlify
+Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Supabase (Postgres + Auth + Row Level Security) · Recharts · decimal.js · lucide-react · Vitest · Netlify
 
 ## Run locally
 

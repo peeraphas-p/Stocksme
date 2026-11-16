@@ -4,10 +4,6 @@ export const en: Messages = {
   meta: {
     title: "Stocksme",
     description: "A US stock trading journal — real P/L in USD and THB",
-    welcomeTitle: "Stocksme — US stock trading journal",
-    welcomeDescription: "Import your Dime or Webull export and see net P/L after fees, in dollars and baht",
-    privacyTitle: "Privacy policy — Stocksme",
-    termsTitle: "Terms of use — Stocksme",
   },
   common: {
     add: "Add",
@@ -397,10 +393,6 @@ export const en: Messages = {
     fieldTime: "Time (if separate)",
     fieldOrderId: "Order number",
     fieldStatus: "Order status",
-    skipStatus: "Status {v}",
-    skipEmpty: "Empty row",
-    skipTotal: "Total row",
-    skipZero: "Not filled (quantity 0)",
     errNoSymbol: "No stock symbol",
     errSide: "Can't read buy/sell (“{v}”)",
     errQty: "Invalid quantity",
