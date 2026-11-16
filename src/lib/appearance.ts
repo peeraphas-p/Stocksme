@@ -5,7 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 /** หน้าตาแอปที่ผู้ใช้ปรับได้ (เก็บในเครื่องนี้) */
 export interface Appearance {
   theme: "system" | "light" | "dark";
-  background: "room" | "plain";
+  /** stars = ดาวพิกเซลบนท้องฟ้ามืด (ใช้ธีมมืดเสมอ), room = รูปห้อง, plain = สีเรียบ */
+  background: "stars" | "room" | "plain";
   blur: number; // px
   opacity: number; // 0.08–0.9
   saturation: number; // 0.5–2
@@ -14,7 +15,7 @@ export interface Appearance {
 
 export const DEFAULT_APPEARANCE: Appearance = {
   theme: "system",
-  background: "room",
+  background: "stars",
   blur: 22,
   opacity: 0.3,
   saturation: 1.2,
@@ -28,6 +29,8 @@ export const GLASS_PRESETS: { name: string; value: Pick<Appearance, "blur" | "op
 ];
 
 const KEY = "stocksme.appearance";
+/** เพิ่มเมื่อเปลี่ยนค่าเริ่มต้น: v2 = พื้นหลังดาวเป็นค่าเริ่มต้น (ค่าที่บันทึกก่อนหน้านี้จะย้ายมาเป็นดาวครั้งเดียว) */
+const VERSION = 2;
 const EVENT = "stocksme:appearance";
 
 const clamp = (v: unknown, min: number, max: number, fallback: number) =>
@@ -37,7 +40,7 @@ export function normalizeAppearance(v: Partial<Appearance> | null | undefined): 
   const d = DEFAULT_APPEARANCE;
   return {
     theme: v?.theme === "light" || v?.theme === "dark" ? v.theme : "system",
-    background: v?.background === "plain" ? "plain" : "room",
+    background: v?.background === "plain" || v?.background === "room" ? v.background : "stars",
     blur: clamp(v?.blur, 0, 40, d.blur),
     opacity: clamp(v?.opacity, 0.08, 0.9, d.opacity),
     saturation: clamp(v?.saturation, 0.5, 2, d.saturation),
@@ -47,7 +50,9 @@ export function normalizeAppearance(v: Partial<Appearance> | null | undefined): 
 
 function load(): Appearance {
   try {
-    return normalizeAppearance(JSON.parse(localStorage.getItem(KEY) ?? "null"));
+    const raw = JSON.parse(localStorage.getItem(KEY) ?? "null");
+    if (raw && raw.v !== VERSION) raw.background = "stars";
+    return normalizeAppearance(raw);
   } catch {
     return DEFAULT_APPEARANCE;
   }
@@ -61,6 +66,7 @@ export function applyAppearance(a: Appearance) {
   el.style.setProperty("--glass-opacity", String(a.opacity));
   el.style.setProperty("--glass-sat", String(a.saturation));
   el.style.setProperty("--glass-edge", String(a.edge));
+  el.setAttribute("data-bg", a.background);
   if (a.background === "plain") el.style.setProperty("--room-image", "none");
   else el.style.removeProperty("--room-image");
 }
@@ -69,7 +75,7 @@ export function applyAppearance(a: Appearance) {
  * สคริปต์เล็กๆ ที่รันก่อนหน้าเว็บแสดงผล เพื่อไม่ให้ธีม/กระจกกระพริบตอนโหลด
  * (ต้องตรงกับ applyAppearance)
  */
-export const APPEARANCE_BOOT_SCRIPT = `try{var a=JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})||"null");if(a){var e=document.documentElement,s=e.style;if(a.theme==="light"||a.theme==="dark")e.setAttribute("data-theme",a.theme);if(typeof a.blur==="number")s.setProperty("--glass-blur",a.blur+"px");if(typeof a.opacity==="number")s.setProperty("--glass-opacity",a.opacity);if(typeof a.saturation==="number")s.setProperty("--glass-sat",a.saturation);if(typeof a.edge==="number")s.setProperty("--glass-edge",a.edge);if(a.background==="plain")s.setProperty("--room-image","none")}}catch(_){}`;
+export const APPEARANCE_BOOT_SCRIPT = `try{var a=JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})||"null");if(a){var e=document.documentElement,s=e.style;if(a.theme==="light"||a.theme==="dark")e.setAttribute("data-theme",a.theme);if(typeof a.blur==="number")s.setProperty("--glass-blur",a.blur+"px");if(typeof a.opacity==="number")s.setProperty("--glass-opacity",a.opacity);if(typeof a.saturation==="number")s.setProperty("--glass-sat",a.saturation);if(typeof a.edge==="number")s.setProperty("--glass-edge",a.edge);if(a.background==="plain")s.setProperty("--room-image","none")}var b=a&&a.v===${VERSION}&&(a.background==="room"||a.background==="plain")?a.background:"stars";document.documentElement.setAttribute("data-bg",b)}catch(_){document.documentElement.setAttribute("data-bg","stars")}`;
 
 /** อ่าน/แก้หน้าตาแอป; ทุก component ที่ใช้ hook นี้จะอัปเดตพร้อมกัน */
 export function useAppearance() {
@@ -90,7 +96,7 @@ export function useAppearance() {
     const next = normalizeAppearance({ ...load(), ...patch });
     applyAppearance(next);
     try {
-      localStorage.setItem(KEY, JSON.stringify(next));
+      localStorage.setItem(KEY, JSON.stringify({ ...next, v: VERSION }));
     } catch {}
     setValue(next);
     window.dispatchEvent(new Event(EVENT));
@@ -100,7 +106,7 @@ export function useAppearance() {
 }
 
 /** โหมดที่แสดงอยู่จริง (แปลง "system" เป็นสว่าง/มืดตามเครื่อง) */
-export function useResolvedDark(theme: Appearance["theme"]) {
+export function useResolvedDark({ theme, background }: Pick<Appearance, "theme" | "background">) {
   const [systemDark, setSystemDark] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -109,5 +115,5 @@ export function useResolvedDark(theme: Appearance["theme"]) {
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
   }, []);
-  return theme === "dark" || (theme === "system" && systemDark);
+  return background === "stars" || theme === "dark" || (theme === "system" && systemDark);
 }

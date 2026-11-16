@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai } from "next/font/google";
+import StarsBackground from "@/components/StarsBackground";
 import { APPEARANCE_BOOT_SCRIPT } from "@/lib/appearance";
 import "./globals.css";
 
@@ -29,7 +30,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/* ใช้ธีม/กระจกที่บันทึกไว้ก่อนแสดงผล เพื่อไม่ให้กระพริบ */}
         <script dangerouslySetInnerHTML={{ __html: APPEARANCE_BOOT_SCRIPT }} />
       </head>
-      <body className={`${thai.variable} antialiased`}>{children}</body>
+      <body className={`${thai.variable} antialiased`}>
+        <StarsBackground />
+        {children}
+      </body>
     </html>
   );
 }

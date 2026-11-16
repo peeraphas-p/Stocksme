@@ -64,7 +64,8 @@
     color-scheme: dark;
   }
 }
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+:root[data-bg="stars"] {
   --room: #282a25;
   --shade: #12100e8c;
   --surface: #262322;
@@ -88,6 +89,22 @@
   --cta-ink: #0c1d14;
   --glass-tint: #3a3128;
   color-scheme: dark;
+}
+
+/* พื้นหลังดาวพิกเซล: ท้องฟ้ามืด + ลายตารางจุดแบบเดโม, ใช้ธีมมืดเสมอ กระจกโทนเย็นขึ้น */
+:root[data-bg="stars"] {
+  --room: #000000;
+  --shade: transparent;
+  --glass-tint: #1b2436;
+  --stars-grid: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAIElEQVR42mIUEhJiwAbevXuHVZyJgUQwqmEUDB0AEGAADd8DEPTX6ksAAAAASUVORK5CYII=");
+}
+:root[data-bg="stars"] body::before {
+  background: #000 var(--stars-grid) 0 0 / 10px 10px repeat;
+}
+/* ดาวมีขนาด 5px — ถ้าเบลอมากจะหายไปหลังกระจก จึงจำกัดความเบลอไว้ที่ 3px */
+:root[data-bg="stars"] .glass {
+  backdrop-filter: blur(min(var(--glass-blur), 3px)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(min(var(--glass-blur), 3px)) saturate(var(--glass-sat));
 }
 
 @theme inline {

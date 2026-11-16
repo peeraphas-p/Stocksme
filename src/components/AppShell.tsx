@@ -102,14 +102,22 @@ export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean 
       <div className="mt-4 flex items-center justify-between gap-3 text-xs">
         <span>พื้นหลัง</span>
         <div className="segment" role="group" aria-label="พื้นหลัง">
-          <button aria-pressed={a.background === "room"} onClick={() => set({ background: "room" })}>
-            รูปห้อง
-          </button>
-          <button aria-pressed={a.background === "plain"} onClick={() => set({ background: "plain" })}>
-            สีเรียบ
-          </button>
+          {(
+            [
+              ["stars", "ดาว"],
+              ["room", "รูปห้อง"],
+              ["plain", "สีเรียบ"],
+            ] as const
+          ).map(([bg, label]) => (
+            <button key={bg} aria-pressed={a.background === bg} onClick={() => set({ background: bg })}>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
+      {a.background === "stars" ? (
+        <p className="mt-3 text-[11px] text-muted">พื้นหลังดาวใช้ธีมมืดเสมอ และเบลอได้สูงสุด 3px เพื่อให้เห็นดาว — เลือก “รูปห้อง” หรือ “สีเรียบ” เพื่อใช้ธีมสว่างหรือเบลอมากกว่านี้</p>
+      ) : (
       <div className="mt-3 flex items-center justify-between gap-3 text-xs">
         <span>ธีม</span>
         <div className="segment" role="group" aria-label="ธีม">
@@ -120,7 +128,8 @@ export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean 
           ))}
         </div>
       </div>
-      <button className="btn mt-5 w-full text-xs" onClick={() => set({ ...GLASS_PRESETS[1].value, background: "room" })}>
+      )}
+      <button className="btn mt-5 w-full text-xs" onClick={() => set({ ...GLASS_PRESETS[1].value, background: "stars" })}>
         คืนค่าเริ่มต้น
       </button>
     </>
@@ -152,7 +161,7 @@ function GlassPanel({ onClose }: { onClose: () => void }) {
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [appearance, setAppearance] = useAppearance();
-  const dark = useResolvedDark(appearance.theme);
+  const dark = useResolvedDark(appearance);
   const [panel, setPanel] = useState(false);
   const panelWrap = useRef<HTMLDivElement>(null);
 
@@ -190,9 +199,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <Settings2 size={16} aria-hidden="true" />
               <span className="hidden sm:inline">ปรับหน้าตา</span>
             </button>
-            <button className="icon-btn" aria-label={dark ? "เปลี่ยนเป็นธีมสว่าง" : "เปลี่ยนเป็นธีมมืด"} onClick={() => setAppearance({ theme: dark ? "light" : "dark" })}>
-              {dark ? <Sun size={17} /> : <Moon size={17} />}
-            </button>
+            {appearance.background !== "stars" && (
+              <button className="icon-btn" aria-label={dark ? "เปลี่ยนเป็นธีมสว่าง" : "เปลี่ยนเป็นธีมมืด"} onClick={() => setAppearance({ theme: dark ? "light" : "dark" })}>
+                {dark ? <Sun size={17} /> : <Moon size={17} />}
+              </button>
+            )}
             <Link href="/settings" className={`icon-btn ${path.startsWith("/settings") ? "bg-[var(--hover)]" : ""}`} aria-label="ตั้งค่า" title="ตั้งค่า">
               <Settings size={17} />
             </Link>
