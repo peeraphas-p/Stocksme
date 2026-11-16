@@ -193,7 +193,9 @@ function YearlyReport({ lots }: { lots: ClosedLot[] }) {
           <tbody>
             {rows.map((r) => (
               <tr key={r.year}>
-                <td className="p-3 font-medium">{r.year}</td>
+                <td className="p-3 font-medium whitespace-nowrap">
+                  {Number(r.year) + 543} <span className="text-[11px] font-normal text-muted">({r.year})</span>
+                </td>
                 <td className="p-3 text-right text-muted">{r.trades}</td>
                 <td className="p-3 text-right hidden sm:table-cell whitespace-nowrap">
                   <span className="text-gain">{money(r.grossWinUsd, "USD", { sign: true })}</span> / <span className="text-loss">{money(r.grossLossUsd, "USD", { sign: true })}</span>

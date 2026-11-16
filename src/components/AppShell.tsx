@@ -45,7 +45,7 @@ function Dock({ path, compact = false }: { path: string; compact?: boolean }) {
             href={href}
             aria-current={on ? "page" : undefined}
             className={`flex items-center justify-center transition-colors ${
-              compact ? "flex-1 flex-col gap-0.5 rounded-[14px] py-1.5 text-[10px]" : "gap-2 rounded-full px-4 py-2.5 text-xs"
+              compact ? "flex-1 flex-col gap-0.5 rounded-[14px] py-1.5 text-[10px] whitespace-nowrap" : "gap-2 rounded-full px-4 py-2.5 text-xs whitespace-nowrap"
             } ${on ? "bg-surface text-fg shadow-[0_3px_8px_var(--soft)]" : "text-muted hover:bg-[var(--hover)] hover:text-fg"}`}
           >
             <Icon size={compact ? 19 : 15} strokeWidth={on ? 2 : 1.7} aria-hidden="true" />
@@ -219,7 +219,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         <main className="glass relative rounded-[22px] px-3.5 pt-5 pb-6 sm:rounded-[27px] sm:px-7 sm:pt-7 md:pb-24">
           <div className="space-y-4">{children}</div>
-          <div className="absolute bottom-[18px] left-1/2 hidden -translate-x-1/2 md:block">
+          <div className="absolute bottom-[18px] left-1/2 hidden w-max -translate-x-1/2 md:block">
             <Dock path={path} />
           </div>
         </main>
