@@ -81,7 +81,7 @@ export default function AccountCard() {
           <h2 className="text-sm font-semibold tracking-tight">บัญชี</h2>
           <p className="text-xs text-muted">{email || "—"}</p>
         </div>
-        <button className="btn" onClick={signOut}>
+        <button className="btn btn-danger" onClick={signOut}>
           <LogOut size={15} aria-hidden="true" />
           ออกจากระบบ
         </button>
@@ -95,7 +95,7 @@ export default function AccountCard() {
             </span>
             <input type="password" minLength={6} required autoComplete="new-password" placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)" value={pw} onChange={(e) => setPw(e.target.value)} />
           </label>
-          <button className="btn" disabled={busy === "pw" || pw.length < 6}>
+          <button className="btn btn-primary" disabled={busy === "pw" || pw.length < 6}>
             {busy === "pw" ? "กำลังบันทึก…" : "บันทึกรหัสผ่านใหม่"}
           </button>
           {pwMsg && <p className={`text-xs ${pwMsg.ok ? "text-gain" : "text-loss"}`}>{pwMsg.text}</p>}
@@ -108,7 +108,7 @@ export default function AccountCard() {
             </span>
           </div>
           <p className="text-xs text-muted">รายการซื้อขาย สมุดบันทึก เงินเข้า-ออก ประวัติการนำเข้า และการตั้งค่า เป็นไฟล์ JSON ไฟล์เดียว</p>
-          <button className="btn" onClick={exportJson} disabled={busy === "export"}>
+          <button className="btn btn-primary" onClick={exportJson} disabled={busy === "export"}>
             {busy === "export" ? "กำลังเตรียมไฟล์…" : "ดาวน์โหลดข้อมูลทั้งหมด (JSON)"}
           </button>
         </div>
@@ -116,7 +116,7 @@ export default function AccountCard() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] bg-loss-soft p-3">
         <p className="text-xs text-loss">ลบบัญชีและข้อมูลทั้งหมดถาวร กู้คืนไม่ได้</p>
-        <button className="btn btn-danger !py-1.5 text-xs" onClick={() => setDelOpen(true)}>
+        <button className="btn btn-danger-solid !py-1.5 text-xs" onClick={() => setDelOpen(true)}>
           <Trash2 size={14} aria-hidden="true" />
           ลบบัญชี
         </button>
@@ -139,7 +139,7 @@ export default function AccountCard() {
             <button className="btn" onClick={() => setDelOpen(false)} disabled={busy === "delete"}>
               ยกเลิก
             </button>
-            <button className="btn !bg-loss text-white" onClick={remove} disabled={typed.trim() !== CONFIRM_WORD || busy === "delete"}>
+            <button className="btn btn-danger-solid" onClick={remove} disabled={typed.trim() !== CONFIRM_WORD || busy === "delete"}>
               {busy === "delete" ? "กำลังลบ…" : "ลบบัญชีถาวร"}
             </button>
           </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computePnl, orderTrades } from "./pnl";
-import { equityCurve, rBucket, rSummary, summarize, yearCsv, yearlySummary } from "./stats";
+import { equityCurve, groupPnl, rBucket, rSummary, summarize, yearCsv, yearlySummary } from "./stats";
 import type { Trade } from "./types";
 
 let n = 0;
@@ -257,5 +257,18 @@ describe("yearly report", () => {
     const csv = yearCsv(r.closed, "2025").split("\n");
     expect(csv).toHaveLength(2);
     expect(csv[1]).toContain("34.0000,35.0000");
+  });
+});
+
+describe("groupPnl", () => {
+  it("counts a sale that closes lots from different days once, under its largest lot", () => {
+    const r = computePnl([
+      t("BUY", 1, 100, "2026-06-01T14:00:00Z"), // Monday, small lot
+      t("BUY", 9, 100, "2026-06-02T14:00:00Z"), // Tuesday, big lot
+      t("SELL", 10, 110, "2026-06-03T14:00:00Z"), // one sale: +$100
+    ]);
+    expect(r.closed).toHaveLength(2);
+    const byDay = groupPnl(r.closed, "USD", (l) => new Date(l.buyAt).getUTCDay().toString());
+    expect(byDay).toEqual([{ key: "2", pnl: 100, count: 1, wins: 1 }]);
   });
 });

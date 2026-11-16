@@ -14,19 +14,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandMark, Wordmark } from "@/components/Brand";
-import { EquityChart } from "@/components/Charts";
+import { PeakHero } from "@/components/PeakCards";
 
 export const metadata: Metadata = {
   title: "Stocksme — สมุดบันทึกการเทรดหุ้น US",
   description: "นำเข้าไฟล์จาก Dime หรือ Webull แล้วดูกำไรขาดทุนสุทธิหลังหักค่าธรรมเนียม ทั้งดอลลาร์และบาท",
 };
-
-// ข้อมูลตัวอย่างสำหรับภาพตัวอย่างหน้าแรกเท่านั้น (ไม่ใช่ข้อมูลของใคร)
-const SAMPLE = [12, 30, 18, 46, 61, 40, 72, 95, 88, 120, 104, 141, 168, 150, 186, 210, 197, 236, 262, 248].map((cum, i, a) => ({
-  day: `2026-10-${String(i + 6).padStart(2, "0")}`,
-  cum,
-  pnl: cum - (a[i - 1] ?? 0),
-}));
 
 const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
   { icon: FileSpreadsheet, title: "นำเข้าไฟล์จากโบรก", body: "Dime (ชีตซื้อ + ขายในไฟล์เดียว), Webull และ CSV/Excel ทั่วไป รายการซ้ำข้ามให้เอง" },
@@ -94,30 +87,7 @@ export default function WelcomePage() {
             </div>
 
             {/* ภาพตัวอย่าง (ข้อมูลสมมติ) */}
-            <div className="card !p-5" aria-label="ภาพตัวอย่างหน้าภาพรวม (ข้อมูลตัวอย่าง)">
-              <div className="panel-title">
-                <span>กำไร/ขาดทุนสุทธิ · เดือนนี้</span>
-                <span className="tag bg-bg">ข้อมูลตัวอย่าง</span>
-              </div>
-              <strong className="big-number text-[36px] text-gain">+$248.00</strong>
-              <p className="mt-2 mb-4 text-[11px] text-muted">
-                <span className="tag mr-1.5 bg-gain-soft text-gain">+3.10%</span>
-                ของทุนที่ใช้ · หักค่าธรรมเนียมแล้ว · 32 เทรด
-              </p>
-              <EquityChart data={SAMPLE} currency="USD" />
-              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
-                {[
-                  ["Win rate", "56.3%"],
-                  ["Profit factor", "1.42"],
-                  ["ค่าธรรมเนียม", "$18.40"],
-                ].map(([k, v]) => (
-                  <div key={k}>
-                    <div className="text-[11px] text-muted">{k}</div>
-                    <div className="big-number text-lg">{v}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <PeakHero />
           </section>
 
           {/* Features */}

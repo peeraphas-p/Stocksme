@@ -116,16 +116,22 @@ export function groupPnl(lots: ClosedLot[], c: Currency, key: (l: ClosedLot) => 
   return [...m.values()].sort((a, b) => b.pnl - a.pnl);
 }
 
+/**
+ * 1 การขาย = 1 เทรด: ถ้าการขายครั้งเดียวปิดหลายล็อตที่อยู่คนละกลุ่ม (เช่น ซื้อคนละวัน)
+ * ให้นับทั้งเทรดไว้ในกลุ่มของล็อตที่ใหญ่ที่สุด (ตามทุน) — จำนวนเทรดรวมจึงเท่ากับจำนวนการขาย และกำไรรวมไม่เปลี่ยน
+ */
 function groupRoundTripsBy(lots: ClosedLot[], c: Currency, key: (l: ClosedLot) => string | null) {
-  const m = new Map<string, { key: string; pnl: number }>();
+  const trips = new Map<string, { pnl: number; key: string; weight: number }>();
   for (const l of lots) {
-    const k = key(l) ?? "(ไม่ระบุ)";
-    const id = l.sellTradeId + "|" + k;
-    const cur = m.get(id) ?? { key: k, pnl: 0 };
+    const cur = trips.get(l.sellTradeId) ?? { pnl: 0, key: "", weight: -1 };
     cur.pnl += pnlOf(l, c);
-    m.set(id, cur);
+    if (l.costUsd > cur.weight) {
+      cur.weight = l.costUsd;
+      cur.key = key(l) ?? "(ไม่ระบุ)";
+    }
+    trips.set(l.sellTradeId, cur);
   }
-  return [...m.values()];
+  return [...trips.values()].map(({ key, pnl }) => ({ key, pnl }));
 }
 
 export interface RSummary {

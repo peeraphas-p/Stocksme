@@ -17,9 +17,9 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import AccountMenu from "@/components/AccountMenu";
 import { BrandMark, Wordmark } from "@/components/Brand";
 import { GLASS_PRESETS, useAppearance, useResolvedDark, type Appearance } from "@/lib/appearance";
-import { supabase } from "@/lib/supabase/client";
 
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/", label: "ภาพรวม", icon: Home },
@@ -154,14 +154,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [appearance, setAppearance] = useAppearance();
   const dark = useResolvedDark(appearance.theme);
   const [panel, setPanel] = useState(false);
-  const [initial, setInitial] = useState("");
   const panelWrap = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    supabase()
-      .auth.getUser()
-      .then(({ data }) => setInitial((data.user?.email ?? "").slice(0, 1).toUpperCase()));
-  }, []);
 
   // ปิดแผงเมื่อกด Esc หรือคลิกข้างนอก
   useEffect(() => {
@@ -203,16 +196,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Link href="/settings" className={`icon-btn ${path.startsWith("/settings") ? "bg-[var(--hover)]" : ""}`} aria-label="ตั้งค่า" title="ตั้งค่า">
               <Settings size={17} />
             </Link>
-            {initial && (
-              <Link
-                href="/settings"
-                title="ตั้งค่าบัญชี"
-                className="ml-1 hidden h-[30px] w-[30px] place-items-center rounded-full text-xs font-semibold sm:grid"
-                style={{ background: "color-mix(in srgb, var(--accent) 22%, var(--panel))" }}
-              >
-                {initial}
-              </Link>
-            )}
+            <AccountMenu />
             {panel && <GlassPanel onClose={() => setPanel(false)} />}
           </div>
         </header>

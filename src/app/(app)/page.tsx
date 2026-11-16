@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, Briefcase, Coins, Percent, Scale, TrendingUp, TriangleAlert, Upload, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, Briefcase, Coins, Percent, Scale, TrendingUp, TriangleAlert, Upload } from "lucide-react";
 import { DailyBars, EquityChart } from "@/components/Charts";
+import { PnlPeakCard } from "@/components/PeakCards";
 import PnlCalendar from "@/components/PnlCalendar";
 import { Ticker, TickerLogo, tickerLabel } from "@/components/Ticker";
 import { CurrencyToggle, Empty, ErrorBox, PageHeader, Segmented, Stat, DashboardSkeleton } from "@/components/ui";
@@ -95,62 +96,56 @@ export default function Dashboard() {
         </Link>
       )}
 
-      <div className="grid gap-3 sm:gap-4 lg:grid-cols-[0.82fr_1.5fr]">
-        <section className="card flex flex-col">
-          <div className="panel-title">
-            <span>กำไร/ขาดทุนสุทธิ · {PERIOD_TEXT[period]}</span>
-            <Wallet size={17} strokeWidth={1.7} className="opacity-70" aria-hidden="true" />
-          </div>
-          <strong className={`big-number text-[38px] whitespace-nowrap sm:text-[42px] ${tone(s.net)}`}>{money(s.net, currency, { sign: true })}</strong>
-          <p className="mt-2.5 text-[11px] text-muted">
-            {cost > 0 && <span className={`tag mr-1.5 ${s.net >= 0 ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>{(s.net >= 0 ? "+" : "") + ((s.net / cost) * 100).toFixed(2)}%</span>}
-            ของทุนที่ใช้ · หักค่าธรรมเนียมแล้ว · {s.trades} เทรด
-          </p>
-          <Link href="/trades" className="mt-auto flex items-center gap-2.5 pt-8">
-            <span className="grid h-9 w-9 place-items-center rounded-[10px]" style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)" }}>
-              <Briefcase size={18} strokeWidth={1.7} aria-hidden="true" />
-            </span>
-            <span className="flex flex-col">
-              <strong className="text-xs font-medium">ถืออยู่ {pnl.open.length} ตัว</strong>
-              <span className="text-[11px] text-muted">
-                {live.priced > 0 ? (
-                  <>
-                    มูลค่า {money(currency === "USD" ? live.marketUsd : live.marketUsd * app.latestFx, currency)} ·{" "}
-                    <span className={tone(live.unrealizedUsd)}>{money(currency === "USD" ? live.unrealizedUsd : live.unrealizedThb, currency, { sign: true })} ยังไม่ได้ขาย</span>
-                  </>
-                ) : (
-                  <>ทุน {money(openCost, currency)}</>
-                )}
-              </span>
-            </span>
-            <span className="ml-auto grid h-9 w-9 place-items-center rounded-full bg-bg">
-              <ArrowUpRight size={18} aria-hidden="true" />
-            </span>
-          </Link>
-        </section>
-
-        <section className="card">
-          <div className="panel-title">
-            <h2>กำไรสะสม</h2>
-          </div>
-          <div className="mb-4 flex gap-8">
-            <div className="flex flex-col gap-1">
-              <span className="flex items-center gap-1.5 text-[11px] text-muted">
-                <i className="dot bg-gain" />
-                ไม้กำไรรวม
-              </span>
-              <strong className="big-number text-xl">{money(grossWin, currency)}</strong>
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-[minmax(300px,400px)_1fr] lg:items-start">
+        <PnlPeakCard curve={curve} net={s.net} trades={s.trades} currency={currency} periodLabel={PERIODS.find((p) => p.value === period)!.label} periods={PERIODS} onPeriod={setPeriod} />
+        <div className="space-y-3 sm:space-y-4">
+          <section className="card">
+            <div className="panel-title">
+              <h2>กำไรสะสม</h2>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="flex items-center gap-1.5 text-[11px] text-muted">
-                <i className="dot bg-loss" />
-                ไม้ขาดทุนรวม
-              </span>
-              <strong className="big-number text-xl">{money(Math.abs(grossLoss), currency)}</strong>
+            <div className="mb-4 flex gap-8">
+              <div className="flex flex-col gap-1">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted">
+                  <i className="dot bg-gain" />
+                  ไม้กำไรรวม
+                </span>
+                <strong className="big-number text-xl">{money(grossWin, currency)}</strong>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted">
+                  <i className="dot bg-loss" />
+                  ไม้ขาดทุนรวม
+                </span>
+                <strong className="big-number text-xl">{money(Math.abs(grossLoss), currency)}</strong>
+              </div>
             </div>
-          </div>
-          {curve.length ? <EquityChart data={curve} currency={currency} /> : <div className="py-14 text-center text-[13px] text-muted">ไม่มีไม้ที่ปิดในช่วงนี้</div>}
-        </section>
+            {curve.length ? <EquityChart data={curve} currency={currency} /> : <div className="py-14 text-center text-[13px] text-muted">ไม่มีไม้ที่ปิดในช่วงนี้</div>}
+          </section>
+            <Link href="/trades" className="card flex items-center gap-3 !py-4 transition-transform hover:-translate-y-0.5">
+              <span className="grid h-9 w-9 place-items-center rounded-[10px]" style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)" }}>
+                <Briefcase size={18} strokeWidth={1.7} aria-hidden="true" />
+              </span>
+              <span className="flex flex-col">
+                <strong className="text-xs font-medium">
+                  ถืออยู่ {pnl.open.length} ตัว
+                  {cost > 0 && <span className={`tag ml-2 ${s.net >= 0 ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>{(s.net >= 0 ? "+" : "") + ((s.net / cost) * 100).toFixed(2)}% ของทุนที่ใช้ {PERIOD_TEXT[period]}</span>}
+                </strong>
+                <span className="text-[11px] text-muted">
+                  {live.priced > 0 ? (
+                    <>
+                      มูลค่า {money(currency === "USD" ? live.marketUsd : live.marketUsd * app.latestFx, currency)} ·{" "}
+                      <span className={tone(live.unrealizedUsd)}>{money(currency === "USD" ? live.unrealizedUsd : live.unrealizedThb, currency, { sign: true })} ยังไม่ได้ขาย</span>
+                    </>
+                  ) : (
+                    <>ทุน {money(openCost, currency)}</>
+                  )}
+                </span>
+              </span>
+              <span className="ml-auto grid h-9 w-9 place-items-center rounded-full bg-bg">
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </span>
+            </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
