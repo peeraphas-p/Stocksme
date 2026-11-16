@@ -1,0 +1,12 @@
+# Netlify — ตรวจพบ Next.js และใช้ adapter ของ Netlify ให้อัตโนมัติ
+# ค่า Supabase ใส่ที่ Netlify: Project configuration → Environment variables
+#   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
+# (ค่าที่ขึ้นต้นด้วย NEXT_PUBLIC_ ถูกฝังตอน build — แก้แล้วต้อง deploy ใหม่)
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
