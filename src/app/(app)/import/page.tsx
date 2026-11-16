@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Empty, ErrorBox, PageHeader } from "@/components/ui";
+import { CircleCheck, FileSpreadsheet, History, Info, Undo2, Upload } from "lucide-react";
+import { Empty, ErrorBox, Note, PageHeader } from "@/components/ui";
 import { deleteBatch, importTrades, useBatches } from "@/lib/data";
 import { dateTime, price, qty, tradeTime } from "@/lib/format";
 import { fetchFxRates, usMarketDay } from "@/lib/fx";
@@ -119,7 +120,7 @@ export default function ImportPage() {
 
   return (
     <>
-      <PageHeader title="นำเข้าจากโบรกเกอร์" />
+      <PageHeader eyebrow="CSV หรือ Excel จากแอปโบรก" title="นำเข้า" />
 
       <div className="card space-y-4">
         <div className="flex flex-wrap gap-2">
@@ -130,21 +131,29 @@ export default function ImportPage() {
           ))}
         </div>
         <p className="text-sm text-muted">{info.help}</p>
-        <input
-          key={inputKey}
-          type="file"
-          accept=".csv,.xlsx,.xls,text/csv"
-          onChange={(e) => onFile(e.target.files?.[0])}
-          className="block w-full text-sm file:btn file:mr-3"
-        />
+        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-[14px] border border-dashed border-border px-4 py-8 text-center transition-colors hover:bg-[var(--hover)]">
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-bg">
+            <Upload size={19} strokeWidth={1.7} aria-hidden="true" />
+          </span>
+          <span className="text-[13px] font-medium">{file ? file.name : "เลือกไฟล์ CSV หรือ Excel"}</span>
+          <span className="text-[11px] text-muted">.csv · .xlsx · .xls</span>
+          <input key={inputKey} type="file" accept=".csv,.xlsx,.xls,text/csv" onChange={(e) => onFile(e.target.files?.[0])} className="sr-only" />
+        </label>
       </div>
 
       <ErrorBox error={err} />
-      {done && <div className="card text-gain text-sm">✅ {done}</div>}
+      {done && (
+        <Note icon={CircleCheck} tone="gain">
+          {done}
+        </Note>
+      )}
 
       {cur && (
         <div className="card space-y-4">
-          <div className="text-sm font-bold">{file?.name}</div>
+          <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+            <FileSpreadsheet size={16} aria-hidden="true" />
+            {file?.name}
+          </h2>
 
           {/* ชีตในไฟล์: ติ๊กเพื่อนำเข้า, กดชื่อเพื่อดู/แก้การจับคู่คอลัมน์ */}
           {tables.length > 1 && (
@@ -169,7 +178,7 @@ export default function ImportPage() {
             </div>
           )}
 
-          <div className="text-sm font-bold">
+          <div className="text-sm font-semibold tracking-tight">
             จับคู่คอลัมน์{tables.length > 1 ? ` — ชีต “${sheetLabel(cur)}”` : ""} ({cur.rows.length} แถว)
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -237,7 +246,7 @@ export default function ImportPage() {
                   {curRes.good.slice(0, 6).map(({ trade: t, line }) => (
                     <tr key={line} className="border-t border-border">
                       <td className="py-1 whitespace-nowrap">{tradeTime(t!.executed_at)}</td>
-                      <td className="py-1 font-bold">{t!.symbol}</td>
+                      <td className="py-1 font-medium">{t!.symbol}</td>
                       <td className={`py-1 ${t!.side === "BUY" ? "text-gain" : "text-loss"}`}>{t!.side === "BUY" ? "ซื้อ" : "ขาย"}</td>
                       <td className="py-1 text-right">{qty(t!.qty)}</td>
                       <td className="py-1 text-right">{price(t!.price_usd)}</td>
@@ -260,11 +269,12 @@ export default function ImportPage() {
             ) : (
               <>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                  <span className="text-gain">
-                    ✓ พร้อมนำเข้า {good.length} รายการ (ซื้อ {buys} · ขาย {sells})
+                  <span className="flex items-center gap-1.5 text-gain">
+                    <CircleCheck size={15} aria-hidden="true" />
+                    พร้อมนำเข้า {good.length} รายการ (ซื้อ {buys} · ขาย {sells})
                   </span>
                   {skipped.length > 0 && <span className="text-muted">ข้าม {skipped.length} (ยกเลิก/ว่าง/แถวสรุป)</span>}
-                  {bad.length > 0 && <span className="text-loss">✗ อ่านไม่ได้ {bad.length}</span>}
+                  {bad.length > 0 && <span className="text-loss">อ่านไม่ได้ {bad.length}</span>}
                 </div>
                 {bad.length > 0 && (
                   <div className="max-h-40 overflow-y-auto rounded-xl bg-loss-soft p-3 text-xs text-loss space-y-0.5">
@@ -276,13 +286,17 @@ export default function ImportPage() {
                   </div>
                 )}
                 {good.length > 0 && sells === 0 && (
-                  <p className="rounded-xl bg-bg p-3 text-sm text-muted">
-                    มีแต่<b>รายการซื้อ</b> — หุ้นจะขึ้นเป็น “ถืออยู่” จนกว่าจะนำเข้ารายการขายด้วย แล้วกำไร/ขาดทุนจะคำนวณให้เอง
+                  <p className="flex items-start gap-2.5 rounded-[12px] bg-bg p-3 text-[13px] text-muted">
+                    <Info size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+                    <span>
+                    มีแต่<b>รายการซื้อ</b> — หุ้นจะขึ้นเป็น “ถืออยู่” จนกว่าจะนำเข้ารายการขายด้วย แล้วกำไร/ขาดทุนจะคำนวณให้เอง</span>
                   </p>
                 )}
                 {good.length > 0 && buys === 0 && (
-                  <p className="rounded-xl bg-bg p-3 text-sm text-muted">
-                    มีแต่<b>รายการขาย</b> — ต้องมีรายการซื้อของหุ้นเหล่านี้ด้วย ไม่อย่างนั้นจะขึ้นเตือนว่าขายเกินจำนวนที่ถือ
+                  <p className="flex items-start gap-2.5 rounded-[12px] bg-bg p-3 text-[13px] text-muted">
+                    <Info size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+                    <span>
+                    มีแต่<b>รายการขาย</b> — ต้องมีรายการซื้อของหุ้นเหล่านี้ด้วย ไม่อย่างนั้นจะขึ้นเตือนว่าขายเกินจำนวนที่ถือ</span>
                   </p>
                 )}
                 {dateOnly && <p className="text-xs text-muted">ไฟล์นี้มีแต่วันที่ ไม่มีเวลา — รายงานตามชั่วโมงจะไม่นับรายการเหล่านี้ และไม้ที่ซื้อขายวันเดียวกันจะแสดงเป็น “วันเดียวกัน”</p>}
@@ -297,11 +311,14 @@ export default function ImportPage() {
       )}
 
       <div className="space-y-2">
-        <h2 className="text-sm font-bold">ประวัติการนำเข้า</h2>
+        <h2 className="flex items-center gap-2 px-1 text-sm font-semibold tracking-tight">
+          <History size={15} aria-hidden="true" />
+          ประวัติการนำเข้า
+        </h2>
         {batches.data.length === 0 ? (
-          <Empty>ยังไม่เคยนำเข้า</Empty>
+          <Empty icon={History} title="ยังไม่เคยนำเข้า" />
         ) : (
-          <div className="card p-0">
+          <div className="card p-0 overflow-hidden">
             {batches.data.map((b) => (
               <div key={b.id} className="flex items-center gap-3 border-b border-border p-3 last:border-0 text-sm">
                 <div className="flex-1 min-w-0">
@@ -312,7 +329,8 @@ export default function ImportPage() {
                     {dateTime(b.created_at)} · {b.row_count} รายการ
                   </div>
                 </div>
-                <button className="text-loss cursor-pointer" onClick={() => undo(b.id, b.filename ?? b.broker)}>
+                <button className="btn-ghost hover:!text-loss" onClick={() => undo(b.id, b.filename ?? b.broker)}>
+                  <Undo2 size={14} aria-hidden="true" />
                   ย้อนกลับ
                 </button>
               </div>

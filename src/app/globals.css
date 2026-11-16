@@ -1,69 +1,218 @@
 @import "tailwindcss";
 
+/*
+ * ธีม Stocksme — โทนอบอุ่น + กระจกฝ้า (glass) วางบนรูปห้อง
+ * สี gain/loss ผ่านการตรวจ CVD/contrast แล้วทั้งโหมดสว่างและมืด (ดู README)
+ * ค่ากระจก --glass-* ถูกตั้งจากหน้า "ตั้งค่า" (GlassProvider)
+ */
 :root {
-  --bg: #f6f7f9;
+  --room: #d6cebf;
+  --shade: #e9e7df30;
   --surface: #ffffff;
-  --border: #e3e6ea;
-  --fg: #14171a;
-  --muted: #6b7280;
-  --accent: #2563eb;
-  --gain: #078a7a;
-  --loss: #d9482b;
-  --gain-soft: #dff2ef;
-  --loss-soft: #fbe6e1;
+  --panel: #ffffff;
+  --fg: #242b27;
+  --muted: #5a6259;
+  --accent: #326b54;
+  --brand: #294b39;
+  --brand-ink: #ffffff;
+  --border: #283b3022;
+  --hover: #ffffff40;
+  --highlight: #ffffff;
+  --shadow: #17291b48;
+  --soft: #283b300d;
+  --gain: #13846c;
+  --loss: #bf4628;
+  --gain-soft: #13846c1f;
+  --loss-soft: #bf46281f;
+
+  --glass-blur: 22px;
+  --glass-opacity: 0.3;
+  --glass-sat: 1.2;
+  --glass-edge: 0.6;
+  --glass-tint: #eadbc7;
+  --room-image: url("https://cdn.21st.dev/assets/mirror/4a/4a0ed73b8ab76bd427aa70ab124329127f3df27cc7f31223a832ed7d28b3dda4.jpg");
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1014;
-    --surface: #161a20;
-    --border: #262c35;
-    --fg: #e8eaed;
-    --muted: #9aa0a6;
-    --accent: #5b8def;
-    --gain: #21a893;
-    --loss: #e8603f;
-    --gain-soft: #0f2e2a;
-    --loss-soft: #3a1714;
+  :root:not([data-theme="light"]) {
+    --room: #282a25;
+    --shade: #12100e8c;
+    --surface: #262322;
+    --panel: #2b2825;
+    --fg: #f4f4ed;
+    --muted: #c4bdb2;
+    --accent: #91d5b0;
+    --brand: #e2eee0;
+    --brand-ink: #183725;
+    --border: #e1eddf24;
+    --hover: #ffffff14;
+    --highlight: #ffffff;
+    --shadow: #00000066;
+    --soft: #ffffff0a;
+    --gain: #22a38a;
+    --loss: #e4663f;
+    --gain-soft: #22a38a2b;
+    --loss-soft: #e4663f2b;
+    --glass-tint: #3a3128;
+    color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --room: #282a25;
+  --shade: #12100e8c;
+  --surface: #262322;
+  --panel: #2b2825;
+  --fg: #f4f4ed;
+  --muted: #c4bdb2;
+  --accent: #91d5b0;
+  --brand: #e2eee0;
+  --brand-ink: #183725;
+  --border: #e1eddf24;
+  --hover: #ffffff14;
+  --highlight: #ffffff;
+  --shadow: #00000066;
+  --soft: #ffffff0a;
+  --gain: #22a38a;
+  --loss: #e4663f;
+  --gain-soft: #22a38a2b;
+  --loss-soft: #e4663f2b;
+  --glass-tint: #3a3128;
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-bg: var(--bg);
+  --color-bg: var(--soft);
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-fg: var(--fg);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
   --color-gain: var(--gain);
   --color-loss: var(--loss);
   --color-gain-soft: var(--gain-soft);
   --color-loss-soft: var(--loss-soft);
-  --font-sans: var(--font-thai), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-thai), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 }
 
+html {
+  background: var(--room);
+}
 body {
-  background: var(--bg);
+  min-height: 100dvh;
+  background: transparent;
   color: var(--fg);
   font-family: var(--font-sans);
+  font-size: 14px;
+  letter-spacing: -0.012em;
   font-variant-numeric: tabular-nums;
+}
+/* รูปห้อง + เงา ติดอยู่กับจอ */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+body::before {
+  background: var(--room) var(--room-image) center 56% / cover no-repeat;
+}
+body::after {
+  z-index: -1;
+  background: var(--shade);
+}
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 @layer components {
+  /* พื้นผิวกระจกหลัก: top bar, กรอบเนื้อหา, dock, sheet */
+  .glass {
+    position: relative;
+    background: color-mix(in srgb, var(--surface) calc(var(--glass-opacity) * 100%), transparent);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--highlight) calc(var(--glass-edge) * 100%), transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--highlight) calc(var(--glass-edge) * 34%), transparent),
+      0 20px 52px -25px var(--shadow);
+  }
+  .glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--glass-tint);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  .glass > * {
+    position: relative;
+  }
+  /* แผงข้อมูลบนกระจก */
   .card {
-    @apply bg-surface border border-border rounded-2xl p-4;
+    position: relative;
+    min-width: 0;
+    border-radius: 17px;
+    padding: 20px;
+    background: color-mix(in srgb, var(--panel) calc((0.16 + var(--glass-opacity) * 0.5) * 100%), transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--highlight) calc(var(--glass-edge) * 75%), transparent),
+      0 8px 22px -20px var(--shadow);
+  }
+  .panel-title {
+    @apply mb-4 flex items-center justify-between gap-3 text-xs text-muted;
+  }
+  .panel-title h2 {
+    @apply text-sm font-semibold text-fg;
+    letter-spacing: -0.02em;
+  }
+  .big-number {
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-1 rounded-xl px-4 py-2 text-sm font-medium border border-border bg-surface hover:opacity-90 disabled:opacity-50 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[10px] px-3.5 py-2 text-[13px] font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer;
+    background: color-mix(in srgb, var(--panel) 35%, transparent);
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  .btn:hover:not(:disabled) {
+    background: var(--hover);
   }
   .btn-primary {
-    @apply bg-accent text-white border-transparent;
+    background: var(--brand) !important;
+    color: var(--brand-ink);
+    box-shadow: none;
+  }
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.12);
   }
   .btn-danger {
     @apply text-loss;
   }
+  .btn-ghost {
+    @apply inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted cursor-pointer;
+  }
+  .btn-ghost:hover {
+    @apply text-accent;
+  }
+  .icon-btn {
+    @apply grid h-9 w-9 shrink-0 place-items-center rounded-full cursor-pointer text-fg;
+  }
+  .icon-btn:hover {
+    background: var(--hover);
+  }
   .field {
-    @apply flex flex-col gap-1 text-sm;
+    @apply flex flex-col gap-1.5 text-xs;
   }
   .field > span {
     @apply text-muted;
@@ -72,12 +221,95 @@ body {
   .field select,
   .field textarea,
   .input {
-    @apply w-full rounded-xl border border-border bg-bg px-3 py-2 text-base outline-none focus:border-accent;
+    @apply w-full rounded-[10px] px-3 py-2 text-base outline-none sm:text-sm;
+    background: color-mix(in srgb, var(--panel) 40%, transparent);
+    border: 1px solid var(--border);
+    caret-color: var(--accent);
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus,
+  .input:focus {
+    border-color: var(--accent);
+  }
+  .field input::placeholder,
+  .input::placeholder,
+  .field textarea::placeholder {
+    color: var(--muted);
+    opacity: 0.8;
+  }
+  .field select option {
+    background: var(--panel);
+    color: var(--fg);
   }
   .chip {
-    @apply rounded-full border border-border px-3 py-1 text-sm cursor-pointer;
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs cursor-pointer;
+    box-shadow: inset 0 0 0 1px var(--border);
   }
   .chip-on {
-    @apply bg-accent text-white border-transparent;
+    background: var(--brand);
+    color: var(--brand-ink);
+    box-shadow: none;
+  }
+  .segment {
+    @apply inline-flex gap-0.5 rounded-[10px] p-[3px] text-xs;
+    background: color-mix(in srgb, var(--fg) 7%, transparent);
+  }
+  .segment button {
+    @apply cursor-pointer rounded-[8px] px-2.5 py-1 text-muted;
+  }
+  .segment button[aria-pressed="true"] {
+    color: var(--fg);
+    background: color-mix(in srgb, var(--panel) 85%, transparent);
+    box-shadow: 0 2px 4px var(--soft);
+  }
+  .tag {
+    @apply inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium;
+  }
+  .dot {
+    @apply inline-block h-1.5 w-1.5 shrink-0 rounded-full;
+  }
+  table.data thead th {
+    @apply px-3 py-2.5 text-left text-[11px] font-normal text-muted;
+  }
+  table.data tbody td {
+    @apply px-3 py-3;
+    border-top: 1px solid var(--border);
+  }
+  table.data tbody tr:hover td {
+    background: var(--hover);
+  }
+}
+
+/* แผงค่อยๆ ลอยขึ้นตอนปรากฏ (ทั้งตอนเปลี่ยนหน้าและตอนข้อมูลโหลดเสร็จ) */
+@keyframes rise {
+  from {
+    opacity: 0.45;
+    transform: translateY(12px);
+    filter: blur(3px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    animation: rise 0.48s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  }
+  :where(.grid, .space-y-3, .space-y-4) > .card:nth-child(2) { animation-delay: 45ms; }
+  :where(.grid, .space-y-3, .space-y-4) > .card:nth-child(3) { animation-delay: 90ms; }
+  :where(.grid, .space-y-3, .space-y-4) > .card:nth-child(4) { animation-delay: 135ms; }
+  :where(.grid, .space-y-3, .space-y-4) > .card:nth-child(5) { animation-delay: 180ms; }
+  :where(.grid, .space-y-3, .space-y-4) > .card:nth-child(n + 6) { animation-delay: 225ms; }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .card {
+    background: var(--panel);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }

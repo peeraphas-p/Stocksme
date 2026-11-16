@@ -28,10 +28,10 @@ function Tip({ active, payload, currency, field }: { active?: boolean; payload?:
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
-    <div className="rounded-xl border border-border bg-surface px-3 py-2 text-xs shadow-lg">
+    <div className="rounded-xl px-3 py-2 text-xs shadow-[0_12px_30px_-12px_var(--shadow)] ring-1 ring-[var(--border)]" style={{ background: "color-mix(in srgb, var(--panel) 94%, transparent)", backdropFilter: "blur(12px)" }}>
       <div className="text-muted">{new Date(p.day + "T00:00:00").toLocaleDateString("th-TH", { dateStyle: "medium" })}</div>
-      <div className="font-bold">
-        {field === "cum" ? "สะสม " : "วันนี้ "}
+      <div className="mt-0.5 font-medium">
+        {field === "cum" ? "สะสม " : "วันนั้น "}
         {money(p[field], currency, { sign: true })}
       </div>
       {field === "cum" && <div className="text-muted">วันนั้น {money(p.pnl, currency, { sign: true })}</div>}
@@ -41,7 +41,7 @@ function Tip({ active, payload, currency, field }: { active?: boolean; payload?:
 
 export function EquityChart({ data, currency }: { data: Point[]; currency: Currency }) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height={200}>
       <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
         <defs>
           <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
@@ -49,12 +49,12 @@ export function EquityChart({ data, currency }: { data: Point[]; currency: Curre
             <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid vertical={false} stroke="var(--border)" />
+        <CartesianGrid vertical={false} stroke="var(--fg)" strokeOpacity={0.11} strokeDasharray="3 5" />
         <XAxis dataKey="day" tickFormatter={shortDay} {...axis} minTickGap={24} />
         <YAxis tickFormatter={(v) => money(v, currency, { compact: true })} {...axis} width={64} />
         <ReferenceLine y={0} stroke="var(--muted)" strokeOpacity={0.6} />
         <Tooltip content={<Tip currency={currency} field="cum" />} cursor={{ stroke: "var(--muted)", strokeDasharray: "3 3" }} />
-        <Area type="monotone" dataKey="cum" stroke="var(--accent)" strokeWidth={2} fill="url(#eq)" activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--surface)" }} />
+        <Area type="monotone" dataKey="cum" stroke="var(--accent)" strokeWidth={2.4} fill="url(#eq)" activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--surface)" }} />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -62,13 +62,13 @@ export function EquityChart({ data, currency }: { data: Point[]; currency: Curre
 
 export function DailyBars({ data, currency }: { data: Point[]; currency: Currency }) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height={200}>
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid vertical={false} stroke="var(--border)" />
+        <CartesianGrid vertical={false} stroke="var(--fg)" strokeOpacity={0.11} strokeDasharray="3 5" />
         <XAxis dataKey="day" tickFormatter={shortDay} {...axis} minTickGap={24} />
         <YAxis tickFormatter={(v) => money(v, currency, { compact: true })} {...axis} width={64} />
         <ReferenceLine y={0} stroke="var(--muted)" strokeOpacity={0.6} />
-        <Tooltip content={<Tip currency={currency} field="pnl" />} cursor={{ fill: "var(--border)", opacity: 0.5 }} />
+        <Tooltip content={<Tip currency={currency} field="pnl" />} cursor={{ fill: "var(--fg)", opacity: 0.06 }} />
         <Bar dataKey="pnl" maxBarSize={18} radius={[4, 4, 4, 4]}>
           {data.map((d) => (
             <Cell key={d.day} fill={d.pnl >= 0 ? "var(--gain)" : "var(--loss)"} />

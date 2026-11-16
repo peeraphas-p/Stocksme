@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Download, LogOut, Plus, X } from "lucide-react";
+import { AppearanceControls } from "@/components/AppShell";
 import { CurrencyToggle, PageHeader } from "@/components/ui";
 import { saveProfile } from "@/lib/data";
 import { supabase } from "@/lib/supabase/client";
@@ -66,11 +68,12 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="ตั้งค่า" />
-      {msg && <div className="text-sm text-muted">{msg}</div>}
+      <PageHeader eyebrow="บัญชีและค่าเริ่มต้น" title="ตั้งค่า" />
+      {msg && <div className="text-[13px] text-muted">{msg}</div>}
 
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:items-start">
       <div className="card space-y-2">
-        <div className="text-sm font-bold">สกุลเงินเริ่มต้น</div>
+        <h2 className="text-sm font-semibold tracking-tight">สกุลเงินเริ่มต้น</h2>
         <CurrencyToggle
           value={app.profile.default_currency}
           onChange={(c) => {
@@ -82,13 +85,13 @@ export default function SettingsPage() {
       </div>
 
       <div className="card space-y-3">
-        <div className="text-sm font-bold">กลยุทธ์ (Playbook)</div>
+        <h2 className="text-sm font-semibold tracking-tight">กลยุทธ์ (Playbook)</h2>
         <div className="flex flex-wrap gap-2">
           {tags.map((t) => (
             <span key={t} className="chip">
               {t}
-              <button className="ml-2 text-muted cursor-pointer" onClick={() => removeTag(t)} aria-label={`ลบ ${t}`}>
-                ×
+              <button className="-mr-1 ml-1 grid h-4 w-4 place-items-center rounded-full text-muted hover:text-loss cursor-pointer" onClick={() => removeTag(t)} aria-label={`ลบ ${t}`}>
+                <X size={12} />
               </button>
             </span>
           ))}
@@ -96,19 +99,30 @@ export default function SettingsPage() {
         <div className="flex gap-2">
           <input className="input" placeholder="เพิ่มกลยุทธ์ใหม่" value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTag()} />
           <button className="btn" onClick={addTag}>
+            <Plus size={15} aria-hidden="true" />
             เพิ่ม
           </button>
         </div>
       </div>
 
+      <div className="card">
+        <h2 className="mb-1 text-sm font-semibold tracking-tight">หน้าตาแอป</h2>
+        <p className="mb-4 text-xs text-muted">กระจก พื้นหลัง และธีม · บันทึกไว้ในเครื่องนี้</p>
+        <AppearanceControls />
+      </div>
+
       <div className="card space-y-2">
-        <div className="text-sm font-bold">สำรองข้อมูล</div>
+        <h2 className="text-sm font-semibold tracking-tight">สำรองข้อมูล</h2>
         <button className="btn" onClick={exportCsv} disabled={app.trades.length === 0}>
-          ⬇️ ดาวน์โหลดรายการทั้งหมด (CSV)
+          <Download size={15} aria-hidden="true" />
+          ดาวน์โหลดรายการทั้งหมด (CSV)
         </button>
       </div>
 
+      </div>
+
       <button className="btn btn-danger" onClick={signOut}>
+        <LogOut size={15} aria-hidden="true" />
         ออกจากระบบ
       </button>
     </>

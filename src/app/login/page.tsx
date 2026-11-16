@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChartCandlestick } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 /** แปลข้อความ error ที่พบบ่อยจาก Supabase Auth เป็นภาษาไทย พร้อมบอกวิธีแก้ */
@@ -56,10 +57,13 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-dvh grid place-items-center px-4">
-      <form onSubmit={submit} className="card w-full max-w-sm space-y-4">
+      <form onSubmit={submit} className="glass w-full max-w-sm space-y-4 rounded-[24px] p-6 sm:p-7">
         <div>
-          <h1 className="text-2xl font-bold">📈 Stocksme</h1>
-          <p className="text-sm text-muted">บันทึกการเทรดหุ้น US ของคุณ</p>
+          <span className="mb-4 grid h-10 w-10 place-items-center rounded-[12px] bg-brand text-brand-ink">
+            <ChartCandlestick size={21} strokeWidth={1.8} aria-hidden="true" />
+          </span>
+          <h1 className="text-[26px] leading-tight font-medium tracking-[-0.035em]">{mode === "signin" ? "ยินดีต้อนรับกลับ" : "สร้างบัญชี"}</h1>
+          <p className="mt-1 text-[13px] text-muted">Stocksme · บันทึกการเทรดหุ้น US ของคุณ</p>
         </div>
         <label className="field">
           <span>อีเมล</span>
@@ -82,7 +86,7 @@ export default function LoginPage() {
         </button>
         <button
           type="button"
-          className="text-sm text-muted underline w-full"
+          className="w-full text-[13px] text-muted underline-offset-2 hover:text-fg hover:underline cursor-pointer"
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
         >
           {mode === "signin" ? "ยังไม่มีบัญชี? สมัครสมาชิก" : "มีบัญชีแล้ว? เข้าสู่ระบบ"}

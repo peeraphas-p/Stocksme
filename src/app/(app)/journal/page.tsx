@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { NotebookPen, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { Empty, ErrorBox, PageHeader, Sheet } from "@/components/ui";
 import { deleteJournal, saveJournal, useJournal } from "@/lib/data";
 import { money, tone } from "@/lib/format";
@@ -99,10 +100,11 @@ function JournalForm({ entry, tags, onDone }: { entry?: JournalEntry; tags: stri
               type="button"
               key={n}
               onClick={() => set("rating", f.rating === n ? null : n)}
-              className={`text-2xl cursor-pointer ${f.rating && n <= f.rating ? "" : "opacity-25 grayscale"}`}
+              className={`icon-btn h-9 w-9 ${f.rating && n <= f.rating ? "text-accent" : "text-muted opacity-50"}`}
               aria-label={`${n} ดาว`}
+              aria-pressed={!!f.rating && n <= f.rating}
             >
-              ⭐
+              <Star size={20} strokeWidth={1.6} fill={f.rating && n <= f.rating ? "currentColor" : "none"} />
             </button>
           ))}
         </div>
@@ -129,56 +131,69 @@ export default function JournalPage() {
 
   return (
     <>
-      <PageHeader title="สมุดบันทึกการเทรด">
+      <PageHeader eyebrow="เหตุผล อารมณ์ และบทเรียนของแต่ละวัน" title="สมุดบันทึก">
         <button className="btn btn-primary" onClick={() => setEditing("new")}>
-          + เขียนบันทึก
+          <Plus size={15} aria-hidden="true" />
+          เขียนบันทึก
         </button>
       </PageHeader>
       <ErrorBox error={journal.error} />
       {journal.loading ? (
         <Empty>กำลังโหลด…</Empty>
       ) : journal.data.length === 0 ? (
-        <Empty>จดเหตุผลที่เข้า-ออก อารมณ์ และบทเรียนในแต่ละวัน เพื่อเห็นว่าอะไรทำให้กำไรหรือขาดทุน</Empty>
+        <Empty icon={NotebookPen} title="ยังไม่มีบันทึก">
+          จดเหตุผลที่เข้า-ออก อารมณ์ และบทเรียนในแต่ละวัน เพื่อเห็นว่าอะไรทำให้กำไรหรือขาดทุน
+        </Empty>
       ) : (
         <div className="space-y-3">
           {journal.data.map((e) => {
             const dayPnl = daily.get(e.entry_date);
             return (
-              <article key={e.id} className="card space-y-2">
+              <article key={e.id} className="card space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <b>{new Date(e.entry_date + "T00:00:00").toLocaleDateString("th-TH", { dateStyle: "full" })}</b>
-                  {e.symbol && <span className="chip">{e.symbol}</span>}
-                  {e.strategy_tag && <span className="chip">{e.strategy_tag}</span>}
-                  {e.emotion && <span className="chip">{e.emotion}</span>}
-                  {e.rating && <span className="text-sm">{"⭐".repeat(e.rating)}</span>}
+                  <h2 className="text-sm font-semibold tracking-tight">{new Date(e.entry_date + "T00:00:00").toLocaleDateString("th-TH", { dateStyle: "full" })}</h2>
+                  {e.rating && (
+                    <span className="flex text-accent" aria-label={`วินัย ${e.rating} ดาว`}>
+                      {Array.from({ length: e.rating }, (_, i) => (
+                        <Star key={i} size={13} fill="currentColor" strokeWidth={0} aria-hidden="true" />
+                      ))}
+                    </span>
+                  )}
                   {dayPnl !== undefined && (
-                    <span className={`ml-auto text-sm font-bold ${tone(dayPnl)}`}>วันนั้น {money(dayPnl, app.currency, { sign: true })}</span>
+                    <span className={`ml-auto text-[13px] font-medium ${tone(dayPnl)}`}>วันนั้น {money(dayPnl, app.currency, { sign: true })}</span>
                   )}
                 </div>
+                {(e.symbol || e.strategy_tag || e.emotion) && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {e.symbol && <span className="tag bg-bg">{e.symbol}</span>}
+                    {e.strategy_tag && <span className="tag bg-bg">{e.strategy_tag}</span>}
+                    {e.emotion && <span className="tag bg-bg">{e.emotion}</span>}
+                  </div>
+                )}
                 {e.plan && (
-                  <p className="text-sm whitespace-pre-wrap">
-                    <span className="text-muted">แผน: </span>
-                    {e.plan}
-                  </p>
+                  <div className="text-[13px] leading-relaxed">
+                    <div className="mb-0.5 text-[11px] text-muted">แผน</div>
+                    <p className="whitespace-pre-wrap">{e.plan}</p>
+                  </div>
                 )}
                 {e.result && (
-                  <p className="text-sm whitespace-pre-wrap">
-                    <span className="text-muted">ผล: </span>
-                    {e.result}
-                  </p>
+                  <div className="text-[13px] leading-relaxed">
+                    <div className="mb-0.5 text-[11px] text-muted">ผล</div>
+                    <p className="whitespace-pre-wrap">{e.result}</p>
+                  </div>
                 )}
                 {e.lesson && (
-                  <p className="text-sm whitespace-pre-wrap">
-                    <span className="text-muted">บทเรียน: </span>
-                    {e.lesson}
-                  </p>
+                  <div className="text-[13px] leading-relaxed">
+                    <div className="mb-0.5 text-[11px] text-muted">บทเรียน</div>
+                    <p className="whitespace-pre-wrap">{e.lesson}</p>
+                  </div>
                 )}
-                <div className="flex justify-end gap-3 text-sm">
-                  <button className="text-accent cursor-pointer" onClick={() => setEditing(e)}>
-                    แก้
+                <div className="flex justify-end gap-1">
+                  <button className="icon-btn h-8 w-8 text-muted" onClick={() => setEditing(e)} aria-label="แก้ไขบันทึก" title="แก้ไข">
+                    <Pencil size={14} />
                   </button>
-                  <button className="text-loss cursor-pointer" onClick={() => remove(e)}>
-                    ลบ
+                  <button className="icon-btn h-8 w-8 text-muted hover:text-loss" onClick={() => remove(e)} aria-label="ลบบันทึก" title="ลบ">
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </article>

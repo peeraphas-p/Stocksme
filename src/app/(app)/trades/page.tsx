@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import TradeForm from "@/components/TradeForm";
-import { CurrencyToggle, Empty, ErrorBox, PageHeader, Segmented, Sheet } from "@/components/ui";
+import { Briefcase, CalendarClock, Pencil, Plus, Search, Trash2, TriangleAlert } from "lucide-react";
+import { CurrencyToggle, Empty, ErrorBox, Note, PageHeader, Segmented, Sheet } from "@/components/ui";
 import { deleteTrade } from "@/lib/data";
 import { holding, money, price, qty, tone, tradeTime } from "@/lib/format";
 import { usMarketDay } from "@/lib/fx";
@@ -58,23 +59,27 @@ export default function TradesPage() {
 
   return (
     <>
-      <PageHeader title="รายการซื้อขาย">
+      <PageHeader eyebrow="ทุกการซื้อขายและไม้ที่ปิดแล้ว" title="รายการซื้อขาย">
         <CurrencyToggle value={currency} onChange={app.setCurrency} />
         <button className="btn btn-primary" onClick={() => setEditing("new")}>
-          + เพิ่ม
+          <Plus size={15} aria-hidden="true" />
+          เพิ่มรายการ
         </button>
       </PageHeader>
       <ErrorBox error={app.error} />
       {pnl.warnings.length > 0 && (
-        <div className="card text-sm text-loss space-y-1">
-          {pnl.warnings.map((w) => (
-            <div key={w}>⚠️ {w}</div>
-          ))}
-        </div>
+        <Note icon={TriangleAlert} tone="loss">
+          <div className="space-y-1">
+            {pnl.warnings.map((w) => (
+              <div key={w}>{w}</div>
+            ))}
+          </div>
+        </Note>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Segmented
+          label="มุมมอง"
           value={tab}
           onChange={setTab}
           options={[
@@ -83,19 +88,22 @@ export default function TradesPage() {
             { value: "all", label: `ทั้งหมด (${all.length})` },
           ]}
         />
-        <input className="input max-w-40" placeholder="ค้นหาหุ้น" value={q} onChange={(e) => setQ(e.target.value)} />
+        <label className="relative">
+          <Search size={14} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted" aria-hidden="true" />
+          <input className="input w-44 !py-1.5 pl-8" placeholder="ค้นหาหุ้น" aria-label="ค้นหาหุ้น" value={q} onChange={(e) => setQ(e.target.value)} />
+        </label>
       </div>
 
       {app.loading ? (
         <Empty>กำลังโหลด…</Empty>
       ) : tab === "closed" ? (
         closed.length === 0 ? (
-          <Empty>ยังไม่มีไม้ที่ปิด — เพิ่มรายการซื้อและขาย หรือนำเข้าไฟล์จากโบรก</Empty>
+          <Empty title={query ? "ไม่พบหุ้นที่ค้นหา" : "ยังไม่มีไม้ที่ปิด"}>{query ? "ลองพิมพ์ชื่อหุ้นอื่น" : "เพิ่มรายการซื้อและขาย หรือนำเข้าไฟล์จากโบรก"}</Empty>
         ) : (
           <div className="card p-0 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-xs text-muted text-left">
-                <tr className="border-b border-border">
+            <table className="data w-full text-[13px]">
+              <thead>
+                <tr>
                   <th className="p-3">หุ้น</th>
                   <th className="p-3">ขายเมื่อ</th>
                   <th className="p-3 text-right">จำนวน</th>
@@ -110,8 +118,8 @@ export default function TradesPage() {
                   const v = currency === "USD" ? l.pnlUsd : l.pnlThb;
                   const cost = currency === "USD" ? l.costUsd : l.costThb;
                   return (
-                    <tr key={i} className="border-b border-border last:border-0">
-                      <td className="p-3 font-bold">{l.symbol}</td>
+                    <tr key={i}>
+                      <td className="p-3 font-medium">{l.symbol}</td>
                       <td className="p-3 text-muted whitespace-nowrap">{tradeTime(l.sellAt)}</td>
                       <td className="p-3 text-right">{qty(l.qty)}</td>
                       <td className="p-3 text-right hidden sm:table-cell whitespace-nowrap">
@@ -119,9 +127,9 @@ export default function TradesPage() {
                       </td>
                       <td className="p-3 text-right hidden md:table-cell text-muted">{holding(l.holdingMinutes)}</td>
                       <td className="p-3 hidden md:table-cell text-muted">{l.strategyTag ?? "—"}</td>
-                      <td className={`p-3 text-right font-bold whitespace-nowrap ${tone(v)}`}>
+                      <td className={`p-3 text-right font-medium whitespace-nowrap ${tone(v)}`}>
                         {money(v, currency, { sign: true })}
-                        <div className="text-xs font-normal">{cost ? ((v / cost) * 100).toFixed(2) + "%" : ""}</div>
+                        <div className="text-[11px] font-normal opacity-80">{cost ? ((v / cost) * 100).toFixed(2) + "%" : ""}</div>
                       </td>
                     </tr>
                   );
@@ -132,7 +140,7 @@ export default function TradesPage() {
         )
       ) : tab === "open" ? (
         open.length === 0 ? (
-          <Empty>ไม่มีหุ้นที่ถืออยู่</Empty>
+          <Empty icon={Briefcase} title="ไม่มีหุ้นที่ถืออยู่" />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {open.map((o) => {
@@ -141,7 +149,7 @@ export default function TradesPage() {
               return (
                 <div key={o.symbol} className="card">
                   <div className="flex justify-between gap-2">
-                    <span className="text-lg font-bold break-all">{opt ? `${opt.underlying} ${opt.type} $${opt.strike}` : o.symbol}</span>
+                    <span className="text-base font-semibold tracking-tight break-all">{opt ? `${opt.underlying} ${opt.type} $${opt.strike}` : o.symbol}</span>
                     <span className="text-muted text-sm whitespace-nowrap">
                       {qty(o.qty)} {opt ? "สัญญา" : "หุ้น"}
                     </span>
@@ -151,15 +159,20 @@ export default function TradesPage() {
                       ออปชัน · หมดอายุ {new Date(opt.expiry + "T00:00:00").toLocaleDateString("th-TH", { dateStyle: "medium" })}
                     </div>
                   )}
-                  <div className="mt-2 text-sm text-muted">ต้นทุนเฉลี่ย {price(o.avgCostUsd)}</div>
-                  <div className="text-sm">ทุนรวม {money(currency === "USD" ? o.costUsd : o.costThb, currency)}</div>
-                  <div className="text-xs text-muted mt-1">ซื้อครั้งแรก {tradeTime(o.firstBuyAt)}</div>
+                  <div className="big-number mt-3 text-[22px]">{money(currency === "USD" ? o.costUsd : o.costThb, currency)}</div>
+                  <div className="mt-1 text-xs text-muted">ทุนรวม · เฉลี่ย {price(o.avgCostUsd)} ต่อ{opt ? "สัญญา" : "หุ้น"}</div>
+                  <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-[11px] text-muted">
+                    <CalendarClock size={13} aria-hidden="true" />
+                    ซื้อครั้งแรก {tradeTime(o.firstBuyAt)}
+                  </div>
                   {expired && (
-                    <div className="mt-3 rounded-xl bg-loss-soft p-3 text-xs space-y-2">
-                      <div>ออปชันนี้หมดอายุแล้วแต่ยังไม่มีรายการขาย ถ้าหมดอายุโดยไม่มีมูลค่า ให้บันทึกขายที่ $0 เพื่อนับเป็นขาดทุน</div>
-                      <button className="btn" onClick={() => closeExpired(o, opt.expiry)}>
-                        บันทึกหมดอายุที่ $0
-                      </button>
+                    <div className="mt-3">
+                      <Note icon={TriangleAlert} tone="loss">
+                        <p className="text-xs">หมดอายุแล้วแต่ยังไม่มีรายการขาย ถ้าหมดอายุโดยไม่มีมูลค่า ให้บันทึกขายที่ $0 เพื่อนับเป็นขาดทุน</p>
+                        <button className="btn mt-2 !py-1.5 text-xs" onClick={() => closeExpired(o, opt.expiry)}>
+                          บันทึกหมดอายุที่ $0
+                        </button>
+                      </Note>
                     </div>
                   )}
                 </div>
@@ -168,12 +181,12 @@ export default function TradesPage() {
           </div>
         )
       ) : all.length === 0 ? (
-        <Empty>ยังไม่มีรายการ</Empty>
+        <Empty title={query ? "ไม่พบหุ้นที่ค้นหา" : "ยังไม่มีรายการ"} />
       ) : (
         <div className="card p-0 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-xs text-muted text-left">
-              <tr className="border-b border-border">
+          <table className="data w-full text-[13px]">
+            <thead>
+              <tr>
                 <th className="p-3">วันเวลา</th>
                 <th className="p-3">หุ้น</th>
                 <th className="p-3 text-right">จำนวน</th>
@@ -186,25 +199,25 @@ export default function TradesPage() {
             </thead>
             <tbody>
               {all.map((t) => (
-                <tr key={t.id} className="border-b border-border last:border-0">
+                <tr key={t.id}>
                   <td className="p-3 text-muted whitespace-nowrap">{tradeTime(t.executed_at)}</td>
                   <td className="p-3 whitespace-nowrap">
-                    <span className={`mr-2 rounded px-1.5 py-0.5 text-xs font-bold ${t.side === "BUY" ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>
+                    <span className={`tag mr-2 ${t.side === "BUY" ? "bg-gain-soft text-gain" : "bg-loss-soft text-loss"}`}>
                       {t.side === "BUY" ? "ซื้อ" : "ขาย"}
                     </span>
-                    <b>{t.symbol}</b>
+                    <span className="font-medium">{t.symbol}</span>
                   </td>
                   <td className="p-3 text-right">{qty(t.qty)}</td>
                   <td className="p-3 text-right">{price(t.price_usd)}</td>
                   <td className="p-3 text-right hidden sm:table-cell text-muted">{price(t.fee_usd)}</td>
                   <td className="p-3 text-right hidden md:table-cell text-muted">{t.fx_rate ? Number(t.fx_rate).toFixed(2) : "—"}</td>
                   <td className="p-3 hidden lg:table-cell text-muted max-w-60 truncate">{t.note}</td>
-                  <td className="p-3 text-right whitespace-nowrap">
-                    <button className="text-accent mr-3 cursor-pointer" onClick={() => setEditing(t)}>
-                      แก้
+                  <td className="p-1.5 text-right whitespace-nowrap">
+                    <button className="icon-btn inline-grid h-8 w-8 text-muted" onClick={() => setEditing(t)} aria-label={`แก้ไข ${t.symbol}`} title="แก้ไข">
+                      <Pencil size={14} />
                     </button>
-                    <button className="text-loss cursor-pointer" onClick={() => remove(t)}>
-                      ลบ
+                    <button className="icon-btn inline-grid h-8 w-8 text-muted hover:text-loss" onClick={() => remove(t)} aria-label={`ลบ ${t.symbol}`} title="ลบ">
+                      <Trash2 size={14} />
                     </button>
                   </td>
                 </tr>

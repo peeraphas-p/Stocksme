@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { money } from "@/lib/format";
 import { localDay } from "@/lib/stats";
 import type { Currency } from "@/lib/types";
@@ -43,17 +44,17 @@ export default function PnlCalendar({
   return (
     <div className="card">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <button className="btn px-3" onClick={() => setMonth(new Date(y, m - 1, 1))} aria-label="เดือนก่อน">
-          ‹
+        <button className="icon-btn bg-bg" onClick={() => setMonth(new Date(y, m - 1, 1))} aria-label="เดือนก่อน">
+          <ChevronLeft size={17} />
         </button>
         <div className="text-center">
-          <div className="font-bold">{month.toLocaleDateString("th-TH", { month: "long", year: "numeric" })}</div>
-          <div className="text-xs text-muted">
+          <div className="text-sm font-semibold tracking-tight">{month.toLocaleDateString("th-TH", { month: "long", year: "numeric" })}</div>
+          <div className="mt-0.5 text-[11px] text-muted">
             สุทธิ <b className={monthNet > 0 ? "text-gain" : monthNet < 0 ? "text-loss" : ""}>{money(monthNet, currency, { sign: true })}</b> · เทรด {tradingDays} วัน
           </div>
         </div>
-        <button className="btn px-3" onClick={() => setMonth(new Date(y, m + 1, 1))} aria-label="เดือนถัดไป">
-          ›
+        <button className="icon-btn bg-bg" onClick={() => setMonth(new Date(y, m + 1, 1))} aria-label="เดือนถัดไป">
+          <ChevronRight size={17} />
         </button>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted mb-1">
@@ -72,15 +73,15 @@ export default function PnlCalendar({
             <div
               key={i}
               title={v !== undefined ? `${key}: ${money(v, currency, { sign: true })} (${n} เทรด)` : key}
-              className={`min-h-14 sm:min-h-16 rounded-lg p-1 text-left ${bg} ${key === today ? "ring-2 ring-accent" : ""}`}
+              className={`min-h-14 sm:min-h-16 rounded-[10px] p-1.5 text-left ${bg} ${key === today ? "ring-[1.5px] ring-accent" : ""}`}
             >
               <div className="text-[10px] text-muted">{d.getDate()}</div>
               {v !== undefined && (
                 <>
-                  <div className={`sm:hidden text-[9px] font-bold leading-tight whitespace-nowrap overflow-hidden ${v > 0 ? "text-gain" : v < 0 ? "text-loss" : ""}`}>
+                  <div className={`sm:hidden text-[9px] font-semibold leading-tight whitespace-nowrap overflow-hidden ${v > 0 ? "text-gain" : v < 0 ? "text-loss" : ""}`}>
                     {money(v, currency, { sign: true, compact: true, digits: 0 })}
                   </div>
-                  <div className={`hidden sm:block text-xs font-bold leading-tight whitespace-nowrap ${v > 0 ? "text-gain" : v < 0 ? "text-loss" : ""}`}>
+                  <div className={`hidden sm:block text-xs font-semibold leading-tight whitespace-nowrap ${v > 0 ? "text-gain" : v < 0 ? "text-loss" : ""}`}>
                     {money(v, currency, { sign: true, compact: true })}
                   </div>
                   <div className="hidden sm:block text-[10px] text-muted">{n} เทรด</div>

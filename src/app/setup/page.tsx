@@ -1,8 +1,8 @@
 export default function SetupPage() {
   return (
     <main className="min-h-dvh grid place-items-center px-4 py-10">
-      <div className="card max-w-lg space-y-3 text-sm leading-relaxed">
-        <h1 className="text-xl font-bold">ตั้งค่าฐานข้อมูลก่อนใช้งาน</h1>
+      <div className="glass max-w-lg space-y-3 rounded-[24px] p-6 text-sm leading-relaxed sm:p-7">
+        <h1 className="text-[22px] font-medium tracking-[-0.03em]">ตั้งค่าฐานข้อมูลก่อนใช้งาน</h1>
         <ol className="list-decimal pl-5 space-y-2">
           <li>สมัคร/เข้าสู่ระบบที่ supabase.com แล้วสร้าง Project ใหม่ (ฟรี)</li>
           <li>

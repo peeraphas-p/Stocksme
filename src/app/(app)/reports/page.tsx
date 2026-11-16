@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ChartNoAxesCombined } from "lucide-react";
 import { CurrencyToggle, Empty, PageHeader, Segmented } from "@/components/ui";
 import { money, pct, tone } from "@/lib/format";
 import { isDateOnlyTime } from "@/lib/importers";
@@ -60,7 +61,7 @@ function GroupCard({ title, hint, lots, currency, keyFn, sortByKey }: { title: s
   return (
     <div className="card">
       <div className="mb-3">
-        <div className="text-sm font-bold">{title}</div>
+        <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
         {hint && <div className="text-xs text-muted">{hint}</div>}
       </div>
       {rows.length === 0 ? (
@@ -82,7 +83,7 @@ function GroupCard({ title, hint, lots, currency, keyFn, sortByKey }: { title: s
                   style={{ width: `${(Math.abs(r.pnl) / max) * 50}%` }}
                 />
               </div>
-              <div className={`text-right font-bold whitespace-nowrap ${tone(r.pnl)}`}>{money(r.pnl, currency, { sign: true, compact: true })}</div>
+              <div className={`text-right text-[13px] font-medium whitespace-nowrap ${tone(r.pnl)}`}>{money(r.pnl, currency, { sign: true, compact: true })}</div>
             </div>
           ))}
         </div>
@@ -98,7 +99,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="รายงาน">
+      <PageHeader eyebrow="อะไรทำเงิน อะไรทำให้เสียเงิน" title="รายงาน">
         <CurrencyToggle value={app.currency} onChange={app.setCurrency} />
       </PageHeader>
       <Segmented
@@ -113,7 +114,7 @@ export default function ReportsPage() {
       {app.loading ? (
         <Empty>กำลังโหลด…</Empty>
       ) : lots.length === 0 ? (
-        <Empty>ยังไม่มีไม้ที่ปิดในช่วงนี้</Empty>
+        <Empty icon={ChartNoAxesCombined} title="ยังไม่มีไม้ที่ปิดในช่วงนี้" />
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {REPORTS.map((r) => (
