@@ -5,8 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 /** หน้าตาแอปที่ผู้ใช้ปรับได้ (เก็บในเครื่องนี้) */
 export interface Appearance {
   theme: "system" | "light" | "dark";
-  /** stars = ดาวพิกเซลบนท้องฟ้ามืด (ใช้ธีมมืดเสมอ), room = รูปห้อง, plain = สีเรียบ */
-  background: "stars" | "room" | "plain";
+  /** ledger = สมุดกราฟ (ค่าเริ่มต้น), stars = ดาวพิกเซล (ใช้ธีมมืดเสมอ), room = รูปห้อง, plain = สีเรียบ */
+  background: "ledger" | "stars" | "room" | "plain";
   blur: number; // px
   opacity: number; // 0.08–0.9
   saturation: number; // 0.5–2
@@ -15,7 +15,7 @@ export interface Appearance {
 
 export const DEFAULT_APPEARANCE: Appearance = {
   theme: "system",
-  background: "stars",
+  background: "ledger",
   blur: 22,
   opacity: 0.3,
   saturation: 1.2,
@@ -29,8 +29,8 @@ export const GLASS_PRESETS: { name: string; value: Pick<Appearance, "blur" | "op
 ];
 
 const KEY = "stocksme.appearance";
-/** เพิ่มเมื่อเปลี่ยนค่าเริ่มต้น: v2 = พื้นหลังดาวเป็นค่าเริ่มต้น (ค่าที่บันทึกก่อนหน้านี้จะย้ายมาเป็นดาวครั้งเดียว) */
-const VERSION = 2;
+/** เพิ่มเมื่อเปลี่ยนค่าเริ่มต้น — ค่าที่บันทึกด้วยเวอร์ชันเก่าจะย้ายมาใช้พื้นหลังเริ่มต้นใหม่ครั้งเดียว (v3 = สมุดกราฟ) */
+const VERSION = 3;
 const EVENT = "stocksme:appearance";
 
 const clamp = (v: unknown, min: number, max: number, fallback: number) =>
@@ -40,7 +40,7 @@ export function normalizeAppearance(v: Partial<Appearance> | null | undefined): 
   const d = DEFAULT_APPEARANCE;
   return {
     theme: v?.theme === "light" || v?.theme === "dark" ? v.theme : "system",
-    background: v?.background === "plain" || v?.background === "room" ? v.background : "stars",
+    background: v?.background === "plain" || v?.background === "room" || v?.background === "stars" ? v.background : "ledger",
     blur: clamp(v?.blur, 0, 40, d.blur),
     opacity: clamp(v?.opacity, 0.08, 0.9, d.opacity),
     saturation: clamp(v?.saturation, 0.5, 2, d.saturation),
@@ -51,7 +51,7 @@ export function normalizeAppearance(v: Partial<Appearance> | null | undefined): 
 function load(): Appearance {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null");
-    if (raw && raw.v !== VERSION) raw.background = "stars";
+    if (raw && raw.v !== VERSION) raw.background = "ledger";
     return normalizeAppearance(raw);
   } catch {
     return DEFAULT_APPEARANCE;
@@ -75,7 +75,7 @@ export function applyAppearance(a: Appearance) {
  * สคริปต์เล็กๆ ที่รันก่อนหน้าเว็บแสดงผล เพื่อไม่ให้ธีม/กระจกกระพริบตอนโหลด
  * (ต้องตรงกับ applyAppearance)
  */
-export const APPEARANCE_BOOT_SCRIPT = `try{var a=JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})||"null");if(a){var e=document.documentElement,s=e.style;if(a.theme==="light"||a.theme==="dark")e.setAttribute("data-theme",a.theme);if(typeof a.blur==="number")s.setProperty("--glass-blur",a.blur+"px");if(typeof a.opacity==="number")s.setProperty("--glass-opacity",a.opacity);if(typeof a.saturation==="number")s.setProperty("--glass-sat",a.saturation);if(typeof a.edge==="number")s.setProperty("--glass-edge",a.edge);if(a.background==="plain")s.setProperty("--room-image","none")}var b=a&&a.v===${VERSION}&&(a.background==="room"||a.background==="plain")?a.background:"stars";document.documentElement.setAttribute("data-bg",b)}catch(_){document.documentElement.setAttribute("data-bg","stars")}`;
+export const APPEARANCE_BOOT_SCRIPT = `try{var a=JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})||"null");if(a){var e=document.documentElement,s=e.style;if(a.theme==="light"||a.theme==="dark")e.setAttribute("data-theme",a.theme);if(typeof a.blur==="number")s.setProperty("--glass-blur",a.blur+"px");if(typeof a.opacity==="number")s.setProperty("--glass-opacity",a.opacity);if(typeof a.saturation==="number")s.setProperty("--glass-sat",a.saturation);if(typeof a.edge==="number")s.setProperty("--glass-edge",a.edge);if(a.background==="plain")s.setProperty("--room-image","none")}var b=a&&a.v===${VERSION}&&(a.background==="room"||a.background==="plain"||a.background==="stars")?a.background:"ledger";document.documentElement.setAttribute("data-bg",b)}catch(_){document.documentElement.setAttribute("data-bg","ledger")}`;
 
 /** อ่าน/แก้หน้าตาแอป; ทุก component ที่ใช้ hook นี้จะอัปเดตพร้อมกัน */
 export function useAppearance() {

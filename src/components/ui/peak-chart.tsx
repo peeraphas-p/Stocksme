@@ -2,7 +2,8 @@
 
 // Peak Chart by Louis Studios.
 // 200 more hand-made React components at https://studios.lou15.com/?ref=21st-code
-// Stocksme change: added `valuePrefix` (e.g. "$" / "฿") drawn before the headline number.
+// Stocksme changes: added `valuePrefix` (e.g. "$" / "฿") drawn before the headline number,
+// and `muted` (0 to 1) which lowers the glow saturation and brightness to sit quietly in a page.
 
 import * as React from "react"
 
@@ -115,6 +116,8 @@ export interface PeakChartProps {
   onPeriodChange?: (period: string) => void
   /** Glow colour. The glow, grid, line and dot are hue-shifted to it; the default is the reference blue. */
   accent?: string
+  /** 0 = the original vivid glow, 1 = fully toned down (Stocksme addition). */
+  muted?: number
   /** Card width in pixels. Height follows the 540:696 card ratio and everything scales with it. */
   width?: number
   /** Seconds per reveal cycle. 0 plays the reveal once when the card scrolls into view, then rests with a slow glow breath. */
@@ -458,6 +461,7 @@ export function PeakChart({
   defaultPeriod = "Monthly",
   onPeriodChange,
   accent = BASE_ACCENT,
+  muted = 0,
   width = 420,
   loop = 0,
   backdrop = false,
@@ -826,6 +830,9 @@ export function PeakChart({
     return `hue-rotate(${d.toFixed(1)}deg) saturate(${k.toFixed(3)})`
   })()
 
+  const m = Math.max(0, Math.min(1, muted))
+  const toneDown = m > 0 ? `saturate(${(1 - 0.5 * m).toFixed(3)}) brightness(${(1 - 0.25 * m).toFixed(3)})` : ""
+
   const px = (n: number) => `${(n * u).toFixed(3)}px`
   const textBase: React.CSSProperties = { position: "absolute", whiteSpace: "nowrap", fontFamily: font, fontStretch: "110%", fontWeight: 300, margin: 0, lineHeight: 1 }
   const trendColor = trend === "down" ? "#f08a8a" : "#93cfa2"
@@ -840,7 +847,7 @@ export function PeakChart({
       <canvas
         ref={canvasRef}
         aria-hidden
-        style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none", filter: tint }}
+        style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none", filter: [tint, toneDown].filter(Boolean).join(" ") || undefined }}
       />
       {/* chart hover surface */}
       <div

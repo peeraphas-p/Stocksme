@@ -6,8 +6,10 @@ import { money } from "@/lib/format";
 import type { Currency } from "@/lib/types";
 
 const FONT = 'var(--font-thai), system-ui, -apple-system, "Segoe UI", sans-serif';
-const GAIN_GLOW = "#2ec99a";
-const LOSS_GLOW = "#f07a4a";
+// สีเรืองแสงจากชุดสีของเว็บ (เขียวโลโก้ / ส้มอิฐ) และลดความสดลง ไม่ให้การ์ดเด่นจนขัดตา
+const GAIN_GLOW = "#3e9a6f";
+const LOSS_GLOW = "#c0603f";
+const MUTED = 0.55;
 
 /** ความกว้างของกล่อง (ปัดทีละ 10px เพื่อไม่ให้วาดการ์ดใหม่ทุกพิกเซลตอนย่อขยาย) */
 function useBoxWidth(max: number) {
@@ -56,6 +58,7 @@ export function PnlPeakCard<P extends string>({
           width={width}
           font={FONT}
           accent={net >= 0 ? GAIN_GLOW : LOSS_GLOW}
+          muted={MUTED}
           data={data}
           labels={labels}
           value={Math.abs(net)}
@@ -106,6 +109,7 @@ export function PeakHero() {
           width={width}
           font={FONT}
           accent={GAIN_GLOW}
+          muted={MUTED}
           data={s.data}
           labels={s.labels}
           value={s.value}

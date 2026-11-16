@@ -104,6 +104,7 @@ export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean 
         <div className="segment" role="group" aria-label="พื้นหลัง">
           {(
             [
+              ["ledger", "สมุดกราฟ"],
               ["stars", "ดาว"],
               ["room", "รูปห้อง"],
               ["plain", "สีเรียบ"],
@@ -116,7 +117,7 @@ export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean 
         </div>
       </div>
       {a.background === "stars" ? (
-        <p className="mt-3 text-[11px] text-muted">พื้นหลังดาวใช้ธีมมืดเสมอ และเบลอได้สูงสุด 3px เพื่อให้เห็นดาว — เลือก “รูปห้อง” หรือ “สีเรียบ” เพื่อใช้ธีมสว่างหรือเบลอมากกว่านี้</p>
+        <p className="mt-3 text-[11px] text-muted">พื้นหลังดาวใช้ธีมมืดเสมอ และเบลอได้สูงสุด 3px เพื่อให้เห็นดาว — เลือกพื้นหลังอื่นเพื่อใช้ธีมสว่างหรือเบลอมากกว่านี้</p>
       ) : (
       <div className="mt-3 flex items-center justify-between gap-3 text-xs">
         <span>ธีม</span>
@@ -129,7 +130,7 @@ export function AppearanceControls({ autoFocus = false }: { autoFocus?: boolean 
         </div>
       </div>
       )}
-      <button className="btn mt-5 w-full text-xs" onClick={() => set({ ...GLASS_PRESETS[1].value, background: "stars" })}>
+      <button className="btn mt-5 w-full text-xs" onClick={() => set({ ...GLASS_PRESETS[1].value, background: "ledger" })}>
         คืนค่าเริ่มต้น
       </button>
     </>

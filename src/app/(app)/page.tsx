@@ -216,32 +216,67 @@ export default function Dashboard() {
   );
 }
 
-/** 5 ตัวที่ดีที่สุด และ 5 ตัวที่แย่ที่สุด เป็นแถบยาวตามขนาดกำไร/ขาดทุน */
+type SymbolSort = "pnl" | "trades" | "name";
+
+/**
+ * ผลตามหุ้น: ปกติแสดง 5 ตัวดีสุด + 5 ตัวแย่สุด; กด "ดูทั้งหมด" เพื่อดูครบทุกตัว เรียงได้ตามกำไร จำนวนเทรด หรือชื่อ
+ * ความยาวแถบเทียบกับตัวที่กำไร/ขาดทุนมากที่สุด
+ */
 function SymbolBars({ rows, currency }: { rows: ReturnType<typeof groupPnl>; currency: "USD" | "THB" }) {
-  const shown = rows.length > 10 ? [...rows.slice(0, 5), null, ...rows.slice(-5)] : rows;
+  const [all, setAll] = useState(false);
+  const [sort, setSort] = useState<SymbolSort>("pnl");
+  const sorted =
+    sort === "pnl" ? rows : [...rows].sort((a, b) => (sort === "trades" ? b.count - a.count || b.pnl - a.pnl : tickerLabel(a.key).localeCompare(tickerLabel(b.key))));
+  const collapsible = rows.length > 10;
+  const shown = all || !collapsible ? sorted : [...rows.slice(0, 5), null, ...rows.slice(-5)];
   const max = Math.max(1e-9, ...rows.map((r) => Math.abs(r.pnl)));
+  const wins = rows.filter((r) => r.pnl > 0).length;
   return (
     <div className="space-y-3">
-      {shown.map((g, i) =>
-        g ? (
-          <div key={g.key}>
-            <div className="flex items-center gap-2 text-xs">
-              <TickerLogo symbol={g.key} size={20} />
-              <strong className="font-medium">{tickerLabel(g.key)}</strong>
-              <span className="text-[11px] text-muted">
-                {g.count} เทรด · win {pct(g.wins / g.count)}
+      {all && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Segmented
+            label="เรียงตาม"
+            value={sort}
+            onChange={setSort}
+            options={[
+              { value: "pnl", label: "กำไร" },
+              { value: "trades", label: "จำนวนเทรด" },
+              { value: "name", label: "ชื่อ" },
+            ]}
+          />
+          <span className="text-[11px] text-muted">
+            กำไร {wins} ตัว · ขาดทุน {rows.length - wins} ตัว
+          </span>
+        </div>
+      )}
+      <div className={`space-y-3 ${all ? "max-h-[560px] overflow-y-auto pr-1 [scrollbar-width:thin]" : ""}`}>
+        {shown.map((g, i) =>
+          g ? (
+            <div key={g.key}>
+              <div className="flex items-center gap-2 text-xs">
+                <TickerLogo symbol={g.key} size={20} />
+                <strong className="font-medium">{tickerLabel(g.key)}</strong>
+                <span className="text-[11px] text-muted">
+                  {g.count} เทรด · win {pct(g.wins / g.count)}
+                </span>
+                <strong className={`ml-auto font-medium ${tone(g.pnl)}`}>{money(g.pnl, currency, { sign: true })}</strong>
+              </div>
+              <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-[var(--border)]">
+                <i className={`block h-full rounded-full ${g.pnl >= 0 ? "bg-gain" : "bg-loss"}`} style={{ width: `${(Math.abs(g.pnl) / max) * 100}%` }} />
               </span>
-              <strong className={`ml-auto font-medium ${tone(g.pnl)}`}>{money(g.pnl, currency, { sign: true })}</strong>
             </div>
-            <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-[var(--border)]">
-              <i className={`block h-full rounded-full ${g.pnl >= 0 ? "bg-gain" : "bg-loss"}`} style={{ width: `${(Math.abs(g.pnl) / max) * 100}%` }} />
-            </span>
-          </div>
-        ) : (
-          <div key={"gap" + i} className="text-center text-[11px] text-muted">
-            ⋯
-          </div>
-        ),
+          ) : (
+            <div key={"gap" + i} className="text-center text-[11px] text-muted">
+              ⋯ อีก {rows.length - 10} ตัว
+            </div>
+          ),
+        )}
+      </div>
+      {collapsible && (
+        <button className="btn w-full text-xs" onClick={() => setAll(!all)} aria-expanded={all}>
+          {all ? "ย่อเหลือ 5 ดีสุด / 5 แย่สุด" : `ดูทั้งหมด ${rows.length} ตัว`}
+        </button>
       )}
     </div>
   );

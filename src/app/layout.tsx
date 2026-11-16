@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai } from "next/font/google";
-import StarsBackground from "@/components/StarsBackground";
+import AppBackground from "@/components/AppBackground";
 import { APPEARANCE_BOOT_SCRIPT } from "@/lib/appearance";
 import "./globals.css";
 
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: APPEARANCE_BOOT_SCRIPT }} />
       </head>
       <body className={`${thai.variable} antialiased`}>
-        <StarsBackground />
+        <AppBackground />
         {children}
       </body>
     </html>
