@@ -13,6 +13,7 @@ import {
   Settings2,
   Sun,
   Upload,
+  Wallet,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -23,10 +24,10 @@ import { supabase } from "@/lib/supabase/client";
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/", label: "ภาพรวม", icon: Home },
   { href: "/trades", label: "รายการ", icon: ReceiptText },
+  { href: "/cash", label: "เงิน", icon: Wallet },
   { href: "/journal", label: "บันทึก", icon: NotebookPen },
   { href: "/reports", label: "รายงาน", icon: ChartNoAxesCombined },
   { href: "/import", label: "นำเข้า", icon: Upload },
-  { href: "/settings", label: "ตั้งค่า", icon: Settings },
 ];
 
 function Dock({ path, compact = false }: { path: string; compact?: boolean }) {
@@ -199,6 +200,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <button className="icon-btn" aria-label={dark ? "เปลี่ยนเป็นธีมสว่าง" : "เปลี่ยนเป็นธีมมืด"} onClick={() => setAppearance({ theme: dark ? "light" : "dark" })}>
               {dark ? <Sun size={17} /> : <Moon size={17} />}
             </button>
+            <Link href="/settings" className={`icon-btn ${path.startsWith("/settings") ? "bg-[var(--hover)]" : ""}`} aria-label="ตั้งค่า" title="ตั้งค่า">
+              <Settings size={17} />
+            </Link>
             {initial && (
               <Link
                 href="/settings"
