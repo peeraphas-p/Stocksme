@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, Banknote, Coins, Pencil, PiggyBank, Plus, Trash2, Wallet } from "lucide-react";
 import { TickerLogo } from "@/components/Ticker";
-import { ErrorBox, Note, PageHeader, Segmented, Sheet, Stat } from "@/components/ui";
+import { ErrorBox, Note, PageHeader, Segmented, Sheet, Stat, SkeletonBar } from "@/components/ui";
 import { dividendsBySymbol, signedUsd, summarizeCash } from "@/lib/cash";
 import { deleteCash, saveCash, useCash } from "@/lib/data";
 import { money, tone } from "@/lib/format";
@@ -184,7 +184,11 @@ export default function CashPage() {
             />
           </div>
           {cash.loading ? (
-            <div className="px-5 pb-6 text-[13px] text-muted">กำลังโหลด…</div>
+            <div className="space-y-3 px-5 pb-6">
+              {[0, 1, 2].map((i) => (
+                <SkeletonBar key={i} className="h-9 w-full" />
+              ))}
+            </div>
           ) : rows.length === 0 ? (
             <div className="px-5 pb-8 text-center text-[13px] text-muted">ยังไม่มีรายการ — เริ่มจากบันทึกเงินที่โอนเข้าโบรก</div>
           ) : (

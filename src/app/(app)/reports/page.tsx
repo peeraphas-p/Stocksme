@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ChartNoAxesCombined, Download, Info, Target } from "lucide-react";
-import { CurrencyToggle, Empty, PageHeader, Segmented } from "@/components/ui";
+import { CurrencyToggle, Empty, PageHeader, Segmented, Skeleton } from "@/components/ui";
 import { money, pct, tone } from "@/lib/format";
 import { isDateOnlyTime } from "@/lib/importers";
 import type { ClosedLot } from "@/lib/pnl";
@@ -113,7 +113,7 @@ export default function ReportsPage() {
         ]}
       />
       {app.loading ? (
-        <Empty>กำลังโหลด…</Empty>
+        <Skeleton cards={2} rows={5} className="lg:!grid-cols-2" />
       ) : lots.length === 0 ? (
         <Empty icon={ChartNoAxesCombined} title="ยังไม่มีไม้ที่ปิดในช่วงนี้" />
       ) : (

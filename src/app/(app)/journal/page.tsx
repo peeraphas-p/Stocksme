@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { NotebookPen, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { TickerLogo } from "@/components/Ticker";
-import { Empty, ErrorBox, PageHeader, Sheet } from "@/components/ui";
+import { Empty, ErrorBox, PageHeader, Sheet, Skeleton } from "@/components/ui";
 import { deleteJournal, saveJournal, useJournal } from "@/lib/data";
 import { money, tone } from "@/lib/format";
 import { dailyPnl } from "@/lib/stats";
@@ -140,7 +140,7 @@ export default function JournalPage() {
       </PageHeader>
       <ErrorBox error={journal.error} />
       {journal.loading ? (
-        <Empty>กำลังโหลด…</Empty>
+        <Skeleton rows={3} />
       ) : journal.data.length === 0 ? (
         <Empty icon={NotebookPen} title="ยังไม่มีบันทึก">
           จดเหตุผลที่เข้า-ออก อารมณ์ และบทเรียนในแต่ละวัน เพื่อเห็นว่าอะไรทำให้กำไรหรือขาดทุน

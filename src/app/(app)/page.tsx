@@ -6,7 +6,7 @@ import { ArrowDownRight, ArrowRight, ArrowUpRight, Briefcase, Coins, Percent, Sc
 import { DailyBars, EquityChart } from "@/components/Charts";
 import PnlCalendar from "@/components/PnlCalendar";
 import { Ticker, TickerLogo, tickerLabel } from "@/components/Ticker";
-import { CurrencyToggle, Empty, ErrorBox, PageHeader, Segmented, Stat } from "@/components/ui";
+import { CurrencyToggle, Empty, ErrorBox, PageHeader, Segmented, Stat, DashboardSkeleton } from "@/components/ui";
 import { money, pct, tone, tradeTime } from "@/lib/format";
 import { dailyPnl, equityCurve, filterByPeriod, groupPnl, localDay, roundTrips, summarize, type Period } from "@/lib/stats";
 import { totals, usePrices, valuePositions } from "@/lib/prices";
@@ -66,6 +66,15 @@ export default function Dashboard() {
             เพิ่มรายการเอง
           </Link>
         </Empty>
+      </>
+    );
+  }
+
+  if (app.loading) {
+    return (
+      <>
+        <PageHeader eyebrow={today} title="ภาพรวม" />
+        <DashboardSkeleton />
       </>
     );
   }

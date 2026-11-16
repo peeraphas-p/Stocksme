@@ -138,3 +138,53 @@ export function Note({ icon: Icon, tone = "muted", children }: { icon: LucideIco
     </div>
   );
 }
+
+/** แถบโครงร่างระหว่างโหลด */
+export function SkeletonBar({ className = "" }: { className?: string }) {
+  return <span aria-hidden="true" className={`block animate-pulse rounded-md bg-[color-mix(in_srgb,var(--fg)_9%,transparent)] ${className}`} />;
+}
+
+/** การ์ดโครงร่างระหว่างโหลด (แทนข้อความ "กำลังโหลด…") */
+export function Skeleton({ cards = 1, rows = 4, className = "" }: { cards?: number; rows?: number; className?: string }) {
+  return (
+    <div role="status" aria-label="กำลังโหลด" className={`grid gap-3 sm:gap-4 ${cards > 1 ? "sm:grid-cols-2 lg:grid-cols-4" : ""} ${className}`}>
+      {Array.from({ length: cards }, (_, i) => (
+        <div key={i} className="card space-y-3">
+          <SkeletonBar className="h-3 w-1/3" />
+          {Array.from({ length: rows }, (_, j) => (
+            <SkeletonBar key={j} className={`h-3.5 ${j % 3 === 0 ? "w-full" : j % 3 === 1 ? "w-5/6" : "w-2/3"}`} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** โครงร่างของหน้าภาพรวม */
+export function DashboardSkeleton() {
+  return (
+    <div role="status" aria-label="กำลังโหลด" className="space-y-3 sm:space-y-4">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-[0.82fr_1.5fr]">
+        <div className="card space-y-4">
+          <SkeletonBar className="h-3 w-1/2" />
+          <SkeletonBar className="h-10 w-3/4" />
+          <SkeletonBar className="h-3 w-2/3" />
+          <SkeletonBar className="mt-10 h-9 w-1/2" />
+        </div>
+        <div className="card space-y-4">
+          <SkeletonBar className="h-3 w-1/4" />
+          <SkeletonBar className="h-6 w-1/2" />
+          <SkeletonBar className="h-[170px] w-full" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="card space-y-3">
+            <SkeletonBar className="h-3 w-1/2" />
+            <SkeletonBar className="h-7 w-2/3" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

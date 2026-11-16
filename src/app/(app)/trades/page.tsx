@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import TradeForm from "@/components/TradeForm";
 import { Briefcase, CalendarClock, Pencil, Plus, Search, Trash2, TriangleAlert } from "lucide-react";
 import { Ticker } from "@/components/Ticker";
-import { CurrencyToggle, Empty, ErrorBox, Note, PageHeader, Segmented, Sheet } from "@/components/ui";
+import { CurrencyToggle, Empty, ErrorBox, Note, PageHeader, Segmented, Sheet, Skeleton } from "@/components/ui";
 import { deleteTrade } from "@/lib/data";
 import { holding, money, price, qty, tone, tradeTime } from "@/lib/format";
 import { parseOption } from "@/lib/options";
@@ -75,7 +75,7 @@ export default function TradesPage() {
       </div>
 
       {app.loading ? (
-        <Empty>กำลังโหลด…</Empty>
+        <Skeleton rows={7} />
       ) : tab === "closed" ? (
         closed.length === 0 ? (
           <Empty title={query ? "ไม่พบหุ้นที่ค้นหา" : "ยังไม่มีไม้ที่ปิด"}>{query ? "ลองพิมพ์ชื่อหุ้นอื่น" : "เพิ่มรายการซื้อและขาย หรือนำเข้าไฟล์จากโบรก"}</Empty>
