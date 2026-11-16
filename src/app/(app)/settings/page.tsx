@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Download, LogOut, Plus, X } from "lucide-react";
+import { Download, Plus, X } from "lucide-react";
+import AccountCard from "@/components/AccountCard";
 import { AppearanceControls } from "@/components/AppShell";
 import { CurrencyToggle, PageHeader } from "@/components/ui";
 import { saveProfile } from "@/lib/data";
-import { supabase } from "@/lib/supabase/client";
 import { useApp } from "@/lib/useApp";
 import type { Currency } from "@/lib/types";
 
@@ -17,7 +16,6 @@ function csvCell(v: unknown) {
 
 export default function SettingsPage() {
   const app = useApp();
-  const router = useRouter();
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
@@ -60,18 +58,13 @@ export default function SettingsPage() {
     URL.revokeObjectURL(a.href);
   }
 
-  async function signOut() {
-    await supabase().auth.signOut();
-    router.replace("/login");
-    router.refresh();
-  }
-
   return (
     <>
       <PageHeader eyebrow="บัญชีและค่าเริ่มต้น" title="ตั้งค่า" />
       {msg && <div className="text-[13px] text-muted">{msg}</div>}
 
       <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:items-start">
+      <AccountCard />
       <div className="card space-y-2">
         <h2 className="text-sm font-semibold tracking-tight">สกุลเงินเริ่มต้น</h2>
         <CurrencyToggle
@@ -115,16 +108,11 @@ export default function SettingsPage() {
         <h2 className="text-sm font-semibold tracking-tight">สำรองข้อมูล</h2>
         <button className="btn" onClick={exportCsv} disabled={app.trades.length === 0}>
           <Download size={15} aria-hidden="true" />
-          ดาวน์โหลดรายการทั้งหมด (CSV)
+          ดาวน์โหลดรายการซื้อขาย (CSV)
         </button>
       </div>
 
       </div>
-
-      <button className="btn btn-danger" onClick={signOut}>
-        <LogOut size={15} aria-hidden="true" />
-        ออกจากระบบ
-      </button>
     </>
   );
 }

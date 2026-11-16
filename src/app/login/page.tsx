@@ -24,7 +24,7 @@ function explain(error: { message: string; code?: string }) {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,7 +40,14 @@ export default function LoginPage() {
     setBusy(true);
     setMsg(null);
     const sb = supabase();
-    if (mode === "signin") {
+    if (mode === "forgot") {
+      // ลิงก์ในอีเมลจะพากลับมาที่ /auth/callback แล้วไปหน้าตั้งรหัสผ่านใหม่
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: `${location.origin}/auth/callback?next=/reset-password`,
+      });
+      if (error) setMsg({ kind: "err", text: "ส่งอีเมลไม่สำเร็จ: " + explain(error) });
+      else setMsg({ kind: "ok", text: "ถ้าอีเมลนี้มีบัญชีอยู่ เราส่งลิงก์ตั้งรหัสผ่านใหม่ไปแล้ว เช็กกล่องอีเมล (และโฟลเดอร์สแปม)" });
+    } else if (mode === "signin") {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) setMsg({ kind: "err", text: "เข้าสู่ระบบไม่สำเร็จ: " + explain(error) });
       else {
@@ -70,15 +77,23 @@ export default function LoginPage() {
             <BrandMark size={64} />
             <Wordmark className="text-[26px]" />
           </div>
-          <h1 className="text-[26px] leading-tight font-medium tracking-[-0.035em]">{mode === "signin" ? "ยินดีต้อนรับกลับ" : "สร้างบัญชี"}</h1>
-          <p className="mt-1 text-[13px] text-muted">บันทึกการเทรดหุ้น US ของคุณ</p>
+          <h1 className="text-[26px] leading-tight font-medium tracking-[-0.035em]">{mode === "signin" ? "ยินดีต้อนรับกลับ" : mode === "signup" ? "สร้างบัญชี" : "ลืมรหัสผ่าน"}</h1>
+          <p className="mt-1 text-[13px] text-muted">{mode === "forgot" ? "ใส่อีเมลที่ใช้สมัคร เราจะส่งลิงก์ตั้งรหัสผ่านใหม่ให้" : "บันทึกการเทรดหุ้น US ของคุณ"}</p>
         </div>
         <label className="field">
           <span>อีเมล</span>
           <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
+        {mode !== "forgot" && (
         <label className="field">
-          <span>รหัสผ่าน</span>
+          <span className="flex items-center justify-between">
+            รหัสผ่าน
+            {mode === "signin" && (
+              <button type="button" className="text-[12px] text-muted hover:text-fg cursor-pointer" onClick={() => { setMode("forgot"); setMsg(null); }}>
+                ลืมรหัสผ่าน?
+              </button>
+            )}
+          </span>
           <input
             type="password"
             required
@@ -88,14 +103,18 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
+        )}
         {msg && <p className={msg.kind === "ok" ? "text-gain text-sm" : "text-loss text-sm"}>{msg.text}</p>}
         <button className="btn btn-primary w-full" disabled={busy}>
-          {busy ? "กำลังดำเนินการ…" : mode === "signin" ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
+          {busy ? "กำลังดำเนินการ…" : mode === "signin" ? "เข้าสู่ระบบ" : mode === "signup" ? "สมัครสมาชิก" : "ส่งลิงก์ตั้งรหัสผ่านใหม่"}
         </button>
         <button
           type="button"
           className="w-full text-[13px] text-muted underline-offset-2 hover:text-fg hover:underline cursor-pointer"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+          onClick={() => {
+            setMode(mode === "signin" ? "signup" : "signin");
+            setMsg(null);
+          }}
         >
           {mode === "signin" ? "ยังไม่มีบัญชี? สมัครสมาชิก" : "มีบัญชีแล้ว? เข้าสู่ระบบ"}
         </button>
@@ -104,6 +123,18 @@ export default function LoginPage() {
         <ArrowLeft size={14} aria-hidden="true" />
         กลับหน้าแรก
       </Link>
+      {mode === "signup" && (
+        <p className="mt-3 max-w-sm text-center text-[11px] text-muted">
+          การสมัครถือว่ายอมรับ{" "}
+          <Link href="/terms" className="underline underline-offset-2">
+            เงื่อนไขการใช้งาน
+          </Link>{" "}
+          และ{" "}
+          <Link href="/privacy" className="underline underline-offset-2">
+            นโยบายความเป็นส่วนตัว
+          </Link>
+        </p>
+      )}
     </main>
   );
 }

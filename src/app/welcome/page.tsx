@@ -175,8 +175,15 @@ export default function WelcomePage() {
         </main>
 
         <footer className="glass flex flex-col items-center justify-between gap-1.5 rounded-[16px] px-4 py-3 text-center text-[11px] text-muted sm:flex-row sm:text-left">
-          <span>Stocksme · เครื่องมือบันทึกและคำนวณผลการเทรด ไม่ใช่คำแนะนำการลงทุน</span>
-          <span>ตัวเลขบนหน้านี้เป็นข้อมูลตัวอย่าง</span>
+          <span>Stocksme · เครื่องมือบันทึกและคำนวณผลการเทรด ไม่ใช่คำแนะนำการลงทุน · ตัวเลขบนหน้านี้เป็นข้อมูลตัวอย่าง</span>
+          <span className="flex gap-3">
+            <Link href="/privacy" className="hover:text-fg">
+              นโยบายความเป็นส่วนตัว
+            </Link>
+            <Link href="/terms" className="hover:text-fg">
+              เงื่อนไขการใช้งาน
+            </Link>
+          </span>
         </footer>
       </div>
     </div>

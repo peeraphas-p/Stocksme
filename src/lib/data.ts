@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "./supabase/client";
 import { orderTrades } from "./pnl";
-import type { Currency, ImportBatch, JournalEntry, NewTrade, Profile, Trade } from "./types";
+import type { CashMovement, Currency, ImportBatch, JournalEntry, NewTrade, Profile, Trade } from "./types";
 
 const PAGE = 1000;
 
@@ -152,5 +152,50 @@ export async function importTrades(broker: string, filename: string, rows: NewTr
 
 export async function deleteBatch(id: string) {
   const { error } = await supabase().from("import_batches").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** ข้อมูลทั้งหมดของบัญชีนี้ (สำหรับดาวน์โหลดเก็บไว้ / ย้ายออก) */
+export async function exportAllData() {
+  const sb = supabase();
+  const { data: u } = await sb.auth.getUser();
+  const [trades, journal, batches, cash, profile] = await Promise.all([
+    fetchAll<Trade>("trades", "executed_at", true),
+    fetchAll<JournalEntry>("journal", "entry_date", true),
+    fetchAll<ImportBatch>("import_batches", "created_at", true),
+    fetchAll<CashMovement>("cash_movements", "occurred_on", true).catch(() => [] as CashMovement[]),
+    sb.from("profiles").select("*").maybeSingle(),
+  ]);
+  return {
+    exported_at: new Date().toISOString(),
+    app: "Stocksme",
+    account: { email: u.user?.email ?? null, created_at: u.user?.created_at ?? null },
+    profile: profile.data ?? null,
+    trades,
+    journal,
+    import_batches: batches,
+    cash_movements: cash,
+  };
+}
+
+/** ลบบัญชีและข้อมูลทั้งหมดถาวร (ฟังก์ชัน delete_my_account ใน migration 2) */
+export async function deleteMyAccount() {
+  const { error } = await supabase().rpc("delete_my_account");
+  if (error) throw error;
+  await supabase().auth.signOut();
+}
+
+export const useCash = () =>
+  useLoader(() => fetchAll<CashMovement>("cash_movements", "occurred_on", false), [] as CashMovement[]);
+
+export async function saveCash(c: Omit<CashMovement, "id">, id?: string) {
+  const row = { ...c, symbol: c.symbol?.trim().toUpperCase() || null };
+  const q = id ? supabase().from("cash_movements").update(row).eq("id", id) : supabase().from("cash_movements").insert(row);
+  const { error } = await q;
+  if (error) throw error;
+}
+
+export async function deleteCash(id: string) {
+  const { error } = await supabase().from("cash_movements").delete().eq("id", id);
   if (error) throw error;
 }
