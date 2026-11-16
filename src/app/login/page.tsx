@@ -4,6 +4,21 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
+/** แปลข้อความ error ที่พบบ่อยจาก Supabase Auth เป็นภาษาไทย พร้อมบอกวิธีแก้ */
+function explain(error: { message: string; code?: string }) {
+  const m = error.message.toLowerCase();
+  const c = error.code ?? "";
+  if (c === "signup_disabled" || c === "email_provider_disabled" || m.includes("signups are disabled") || m.includes("signups not allowed"))
+    return "Supabase ปิดการสมัครด้วยอีเมลไว้ — ไปที่ Supabase → Authentication → Sign In / Providers แล้วเปิด “Allow new users to sign up” และเปิด Email provider (ให้ปิดแค่ “Confirm email”)";
+  if (c === "invalid_credentials" || m.includes("invalid login credentials")) return "อีเมลหรือรหัสผ่านไม่ถูกต้อง (ถ้ายังไม่มีบัญชี ให้กด “สมัครสมาชิก” ด้านล่างก่อน)";
+  if (c === "email_not_confirmed" || m.includes("email not confirmed")) return "ยังไม่ได้ยืนยันอีเมล — เช็กกล่องอีเมลแล้วกดลิงก์ยืนยัน หรือปิด “Confirm email” ใน Supabase";
+  if (c === "user_already_exists" || m.includes("already registered")) return "อีเมลนี้สมัครไว้แล้ว — กด “มีบัญชีแล้ว? เข้าสู่ระบบ”";
+  if (c === "weak_password" || m.includes("password should")) return "รหัสผ่านสั้นหรือง่ายเกินไป (อย่างน้อย 6 ตัวอักษร)";
+  if (c === "over_email_send_rate_limit" || m.includes("rate limit")) return "ลองบ่อยเกินไป รอสักครู่แล้วลองใหม่";
+  if (c === "email_address_invalid" || m.includes("is invalid")) return "รูปแบบอีเมลไม่ถูกต้อง";
+  return error.message;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -19,7 +34,7 @@ export default function LoginPage() {
     const sb = supabase();
     if (mode === "signin") {
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) setMsg({ kind: "err", text: "เข้าสู่ระบบไม่สำเร็จ: " + error.message });
+      if (error) setMsg({ kind: "err", text: "เข้าสู่ระบบไม่สำเร็จ: " + explain(error) });
       else {
         router.replace("/");
         router.refresh();
@@ -30,7 +45,7 @@ export default function LoginPage() {
         password,
         options: { emailRedirectTo: `${location.origin}/auth/callback` },
       });
-      if (error) setMsg({ kind: "err", text: "สมัครไม่สำเร็จ: " + error.message });
+      if (error) setMsg({ kind: "err", text: "สมัครไม่สำเร็จ: " + explain(error) });
       else if (data.session) {
         router.replace("/");
         router.refresh();
