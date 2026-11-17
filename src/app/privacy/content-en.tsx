@@ -54,6 +54,9 @@ export function PrivacyEn() {
         <li>
           <b>Exchange rates</b> (Frankfurter, ECB data) — only a date range is sent.
         </li>
+        <li>
+          <b>AI assistant</b> (Claude, by Anthropic) — only when you ask a question on the Ask AI page. Your question, the chat so far and a summary of your account (results, stock names, open positions, cash totals and your ten most recent journal notes) are sent to answer it. Your email and password are not sent. Anthropic processes the request under its commercial terms and does not use it to train models. Stocksme keeps only a count of how many questions you asked each day, to limit cost.
+        </li>
       </ul>
 
       <h2>Cookies</h2>

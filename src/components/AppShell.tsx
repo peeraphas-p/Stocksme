@@ -11,6 +11,7 @@ import {
   ReceiptText,
   Settings,
   Settings2,
+  Sparkles,
   Sun,
   Upload,
   Wallet,
@@ -31,30 +32,28 @@ const NAV: { href: string; key: keyof Messages["nav"]; icon: LucideIcon }[] = [
   { href: "/journal", key: "journal", icon: NotebookPen },
   { href: "/reports", key: "reports", icon: ChartNoAxesCombined },
   { href: "/import", key: "import", icon: Upload },
+  { href: "/ask", key: "ask", icon: Sparkles },
 ];
 
-function Dock({ path, compact = false }: { path: string; compact?: boolean }) {
+/** เมนูหลัก — อยู่ใต้ top bar และติดด้านบนเมื่อเลื่อนหน้า (มือถือ: ไอคอนเหนือชื่อ, จอใหญ่: ไอคอนข้างชื่อ) */
+function NavBar({ path }: { path: string }) {
   const { m } = useI18n();
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
   return (
-    <nav
-      aria-label={m.nav.main}
-      className={`glass flex items-center gap-0.5 ${compact ? "w-full justify-between rounded-[18px] p-1" : "rounded-full p-[5px]"}`}
-    >
+    <nav aria-label={m.nav.main} className="glass flex items-center gap-0.5 rounded-[18px] p-1 md:mx-auto md:w-max md:rounded-full md:p-[5px]">
       {NAV.map(({ href, key, icon: Icon }) => {
-        const label = m.nav[key];
         const on = active(href);
         return (
           <Link
             key={href}
             href={href}
             aria-current={on ? "page" : undefined}
-            className={`flex items-center justify-center transition-colors ${
-              compact ? "flex-1 flex-col gap-0.5 rounded-[14px] py-1.5 text-[10px] whitespace-nowrap" : "gap-2 rounded-full px-4 py-2.5 text-xs whitespace-nowrap"
-            } ${on ? "bg-surface text-fg shadow-[0_3px_8px_var(--soft)]" : "text-muted hover:bg-[var(--hover)] hover:text-fg"}`}
+            className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[14px] py-1.5 text-[10px] whitespace-nowrap transition-colors md:flex-none md:flex-row md:gap-2 md:rounded-full md:px-4 md:py-2.5 md:text-xs ${
+              on ? "bg-surface text-fg shadow-[0_3px_8px_var(--soft)]" : "text-muted hover:bg-[var(--hover)] hover:text-fg"
+            }`}
           >
-            <Icon size={compact ? 19 : 15} strokeWidth={on ? 2 : 1.7} aria-hidden="true" />
-            <span>{label}</span>
+            <Icon size={17} strokeWidth={on ? 2 : 1.7} className="md:h-[15px] md:w-[15px]" aria-hidden="true" />
+            <span className="max-w-full truncate">{m.nav[key]}</span>
           </Link>
         );
       })}
@@ -187,7 +186,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => setPanel(false), [path]);
 
   return (
-    <div className="min-h-dvh px-2.5 pt-3 pb-28 sm:px-5 sm:pt-6 md:pb-8 lg:px-7 lg:pt-8">
+    <div className="min-h-dvh px-2.5 pt-3 pb-8 sm:px-5 sm:pt-6 lg:px-7 lg:pt-8">
       <div className="mx-auto w-full max-w-[1280px]">
         <header className="glass relative z-30 mb-3 flex h-14 items-center justify-between gap-3 rounded-[18px] px-3 sm:mb-4 sm:h-[62px] sm:rounded-[20px] sm:px-5">
           <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap">
@@ -219,16 +218,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="glass relative rounded-[22px] px-3.5 pt-5 pb-6 sm:rounded-[27px] sm:px-7 sm:pt-7 md:pb-24">
-          <div className="space-y-4">{children}</div>
-          <div className="absolute bottom-[18px] left-1/2 hidden w-max -translate-x-1/2 md:block">
-            <Dock path={path} />
-          </div>
-        </main>
-      </div>
+        <div className="sticky top-2 z-20 mb-3 sm:top-3 sm:mb-4">
+          <NavBar path={path} />
+        </div>
 
-      <div className="fixed inset-x-2.5 bottom-[calc(10px+env(safe-area-inset-bottom))] z-30 md:hidden">
-        <Dock path={path} compact />
+        <main className="glass relative rounded-[22px] px-3.5 pt-5 pb-6 sm:rounded-[27px] sm:px-7 sm:pt-7 sm:pb-8">
+          <div className="space-y-4">{children}</div>
+        </main>
       </div>
     </div>
   );

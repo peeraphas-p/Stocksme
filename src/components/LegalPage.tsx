@@ -4,7 +4,7 @@ import { BrandMark, Wordmark } from "@/components/Brand";
 import LanguagePicker from "@/components/LanguagePicker";
 import { getI18n } from "@/i18n/server";
 
-export const LEGAL_UPDATED = "2026-11-16";
+export const LEGAL_UPDATED = "2026-11-17";
 export const CONTACT_URL = "https://github.com/peeraphas-p/Stocksme/issues";
 
 /** หน้ากฎหมาย (ฉบับอังกฤษและไทย) */
