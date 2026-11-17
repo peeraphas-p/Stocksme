@@ -23,14 +23,14 @@
 - **Journal:** plan, reasons for entry and exit, lessons and a discipline rating for each day
 - **Import:** Dime (buy and sell sheets in one file), Webull, and any CSV/Excel file with column mapping; duplicates are skipped automatically and imports can be undone
 - **Options:** reads OCC symbols (e.g. `AMZN250919C00247500`) and closes them at $0 automatically when they expire without a sale
-- **Ask AI:** a chat assistant (Claude, by Anthropic) that answers questions about your own account — monthly summaries, best and worst stocks, which strategies or emotions cost money, cash and dividends. It works from a summary the app builds of your results, never gives buy/sell advice, and is limited to 20 questions per user per day
+- **Ask AI:** a chat assistant that answers questions about your own account — monthly summaries, best and worst stocks, which strategies or emotions cost money, cash and dividends. Each user brings their own API key for **Claude** (Anthropic), **ChatGPT** (OpenAI) or **Gemini** (Google); the site owner pays nothing. It works from a summary the app builds of your results and never gives buy/sell advice
 - **Accounts:** sign up and sign in, password reset and change, download all data (JSON), delete the account permanently; landing page, privacy policy and terms
 - **Languages:** English and Thai, switchable from the top bar or Settings (flag beside each language). On a first visit, people in Thailand see Thai and everyone else sees English
 - **Mobile:** install to the home screen (PWA), light and dark themes, adjustable glass and backgrounds
 
 ## Tech stack
 
-Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Claude API (`@anthropic-ai/sdk`) · Supabase (Postgres + Auth + Row Level Security) · Recharts · decimal.js · lucide-react · Vitest · Netlify
+Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Claude API (`@anthropic-ai/sdk`), OpenAI and Gemini REST (bring your own key) · Supabase (Postgres + Auth + Row Level Security) · Recharts · decimal.js · lucide-react · Vitest · Netlify
 
 ## Run locally
 
@@ -41,7 +41,6 @@ Requires Node.js 22 or newer (see `.nvmrc`).
 3. Supabase → **Authentication → Sign In / Providers → Email**: turn on the Email provider and, for a single user, turn off *Confirm email*.
 4. Supabase → **Project Settings → API Keys** → copy the Project URL and the **Publishable** (or anon) key. Never use the Secret key.
 5. Copy `.env.local.example` to `.env.local` and fill in both values.
-   For **Ask AI**, also set `ANTHROPIC_API_KEY` (from [console.anthropic.com](https://console.anthropic.com) → API Keys). It stays on the server; without it the rest of the app works and the chat shows a setup message.
 6. Start it and open http://localhost:3000 → sign up.
 
    ```bash
@@ -52,7 +51,7 @@ Requires Node.js 22 or newer (see `.nvmrc`).
 ## Deploy on Netlify
 
 1. Netlify → **Add new project → Import from GitHub** → choose this repo (build settings come from [`netlify.toml`](netlify.toml)).
-2. **Project configuration → Environment variables** → add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (same values as `.env.local`), plus `ANTHROPIC_API_KEY` for Ask AI (optionally `AI_DAILY_LIMIT`, default 20 questions per user per day).
+2. **Project configuration → Environment variables** → add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (same values as `.env.local`). Ask AI needs no server setting — each user enters their own key on the Ask AI page.
 3. **Deploys → Trigger deploy → Deploy site**. `NEXT_PUBLIC_` values are baked in at build time, so redeploy after every change.
 4. Supabase → **Authentication → URL Configuration**
    - **Site URL:** `https://<your-site>.netlify.app`
@@ -71,7 +70,6 @@ Schema changes live in [`supabase/migrations/`](supabase/migrations), in file-nu
 |---|---|
 | `20261116000001_init.sql` | Core tables + Row Level Security |
 | `20261116000002_accounts_cash_risk.sql` | Cash ledger, stop/target, self-service account deletion |
-| `20261117000003_ai_usage.sql` | Daily question counter for Ask AI |
 
 ## Email (password reset / confirmation)
 
@@ -93,7 +91,7 @@ Supabase's built-in email sender is heavily rate-limited. If other people will u
 
 - Every table uses Row Level Security, so each account sees only its own data.
 - Stock logos, latest prices and exchange rates are fetched by the server (`/api/logo`, `/api/prices`, `/api/fx`) and cached. The browser never sends your holdings to outside sites directly.
-- **Ask AI** sends the question, the chat so far and a text summary of the account (results, stock names, open positions, cash totals, ten latest journal notes) to the Claude API through `/api/chat`, only when the user asks. No email or password is sent, and the app stores only a daily question count. The API key never reaches the browser.
+- **Ask AI** is bring-your-own-key. The key is stored only in that browser's `localStorage` (`stocksme-ai`) and is never sent to Stocksme's server or database. When the user asks, the browser sends the question, the chat so far and a text summary of the account (results, stock names, open positions, cash totals, ten latest journal notes) straight to the chosen provider: Claude through the official `@anthropic-ai/sdk` (browser mode), OpenAI and Gemini through their REST APIs. No email or password is sent.
 - The first-visit language is chosen from the visitor's country header that Netlify adds to each request; the choice is then stored in a `stocksme-lang` cookie. No location is saved.
 - Never commit real statements — put them in `samples/`, which is in `.gitignore`.
 
@@ -102,13 +100,14 @@ Supabase's built-in email sender is heavily rate-limited. If other people will u
 ```
 src/
   app/(app)/        In-app pages: overview, trades, cash, journal, reports, import, ask (AI chat), settings
-  app/api/          chat (Claude assistant), fx (exchange rates), logo (stock logos), prices (latest prices)
+  app/api/          fx (exchange rates), logo (stock logos), prices (latest prices)
   components/       AppShell (top bar + navigation), LanguagePicker, Charts, PnlCalendar, Ticker, Brand, ui
   i18n/             Languages: config, server/client helpers, messages/en.ts and messages/th.ts
   lib/pnl.ts        FIFO engine + expired options
   lib/importers/    Broker file readers
   lib/stats.ts      Statistics, charts, grouping
   lib/ai-context.ts Account summary sent with Ask AI questions
+  lib/ai/           Ask AI: provider clients (Claude, OpenAI, Gemini), prompt, key storage
 supabase/migrations/ Step-by-step schema changes
 supabase/schema.sql  All migrations combined (for new projects)
 ```

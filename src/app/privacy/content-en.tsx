@@ -18,7 +18,7 @@ export function PrivacyEn() {
           <b>Data you enter or import:</b> trades (symbol, quantity, price, fees, date, exchange rate, order number), cash deposits and withdrawals, journal entries, strategies, emotions, notes and settings.
         </li>
         <li>
-          <b>Only in your browser:</b> theme, glass appearance, display currency and language (not sent to us, except the language cookie your browser sends with each page request).
+          <b>Only in your browser:</b> theme, glass appearance, display currency, language and your AI assistant API key (if you add one) (not sent to us, except the language cookie your browser sends with each page request).
         </li>
         <li>
           <b>Technical data:</b> our hosting and database providers keep standard access logs, such as time, requested page and IP address.
@@ -55,7 +55,7 @@ export function PrivacyEn() {
           <b>Exchange rates</b> (Frankfurter, ECB data) — only a date range is sent.
         </li>
         <li>
-          <b>AI assistant</b> (Claude, by Anthropic) — only when you ask a question on the Ask AI page. Your question, the chat so far and a summary of your account (results, stock names, open positions, cash totals and your ten most recent journal notes) are sent to answer it. Your email and password are not sent. Anthropic processes the request under its commercial terms and does not use it to train models. Stocksme keeps only a count of how many questions you asked each day, to limit cost.
+          <b>AI assistant</b> (optional, with your own API key for Claude by Anthropic, ChatGPT by OpenAI or Gemini by Google) — your key is stored only in your browser and is never sent to Stocksme. When you ask a question on the Ask AI page, your browser sends the question, the chat so far and a summary of your account (results, stock names, open positions, cash totals and your ten most recent journal notes) directly to the provider you chose. Your email and password are not sent. The provider handles that data under its own terms for your account, and usage is billed to your key.
         </li>
       </ul>
 
